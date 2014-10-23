@@ -1,0 +1,481 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Menus and Actions &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Modules" href="03_module_dev.html" />
+    <link rel="next" title="Example of module creation" href="03_module_dev_05.html" />
+    <link rel="prev" title="Views and Events" href="03_module_dev_03.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_05.html" title="Example of module creation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_03.html" title="Views and Events"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="03_module_dev.html" accesskey="U">Modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="menus-and-actions">
+<span id="module-dev-actions"></span><h1>Menus and Actions<a class="headerlink" href="#menus-and-actions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="menus">
+<h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
+<p>Menus are records in the <code class="docutils literal"><span class="pre">ir.ui.menu</span></code> table. In order to create a new
+menu entry, you can directly create a record using the <code class="docutils literal"><span class="pre">record</span></code> tag.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;menu_xml_id&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.ui.menu&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>My Menu<span class="nt">&lt;/field&gt;</span>
+  <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;action&quot;</span> <span class="na">ref=</span><span class="s">&quot;action_xml_id&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;sequence&quot;</span> <span class="na">eval=</span><span class="s">&quot;&lt;integer&gt;&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;parent_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;parent_menu_xml_id&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>There is a shortcut by using the <code class="docutils literal"><span class="pre">menuitem</span></code> tag that <strong>you should use
+preferentially</strong>. It offers a flexible way to easily define the menu entry
+along with icons and other fields.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;menuitem</span> <span class="na">id=</span><span class="s">&quot;menu_xml_id&quot;</span>
+    <span class="na">name=</span><span class="s">&quot;My Menu&quot;</span>
+    <span class="na">action=</span><span class="s">&quot;action_xml_id&quot;</span>
+    <span class="na">icon=</span><span class="s">&quot;NAME_FROM_LIST&quot;</span>
+    <span class="na">groups=</span><span class="s">&quot;groupname&quot;</span>
+    <span class="na">sequence=</span><span class="s">&quot;&lt;integer&gt;&quot;</span>
+    <span class="na">parent=</span><span class="s">&quot;parent_menu_xml_id&quot;</span>
+<span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>Where</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">id</span></code> specifies the <strong>xml identifier</strong> of the menu item in the menu
+items table. This identifier must be unique. Mandatory field.</li>
+<li><code class="docutils literal"><span class="pre">name</span></code> defines the menu name that will be displayed in the client.
+Mandatory field.</li>
+<li><code class="docutils literal"><span class="pre">action</span></code> specifies the identifier of the attached action defined
+in the action table (<code class="docutils literal"><span class="pre">ir.actions.act_window</span></code>). This field is not
+mandatory : you can define menu elements without associating actions
+to them. This is useful when defining custom icons for menu elements
+that will act as folders. This is how custom icons for &#8220;Projects&#8221; or
+&#8220;Human Resources&#8221; in OpenERP are defined).</li>
+<li><code class="docutils literal"><span class="pre">groups</span></code> specifies which group of user can see the menu item.
+(example : groups=&#8221;admin&#8221;). See section &#8221; Management of Access Rights&#8221;
+for more information. Multiple groups should be separated by a &#8216;,&#8217;
+(example: groups=&#8221;admin,user&#8221;)</li>
+<li><code class="docutils literal"><span class="pre">sequence</span></code> is an integer that is used to sort the menu item in the
+menu. The higher the sequence number, the downer the menu item. This
+argument is not mandatory: if sequence is not specified, the menu item
+gets a default sequence number of 10. Menu items with the same sequence
+numbers are sorted by order of creation (<code class="docutils literal"><span class="pre">_order</span> <span class="pre">=</span> <span class="pre">&quot;*sequence,id*&quot;</span></code>).</li>
+</ul>
+</div></blockquote>
+<p>The main current limitation of using <code class="docutils literal"><span class="pre">menuitem</span></code> is that the menu action must be an
+<code class="docutils literal"><span class="pre">act_window</span></code> action. This kind of actions is the most used action in OpenERP.
+However for some menus you will use other actions. For example, the Feeds
+page that comes with the mail module is a client action. For this kind of
+menu entry, you can combine both declaration, as defined in the mail module :</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="c">&lt;!-- toplevel menu --&gt;</span>
+<span class="nt">&lt;menuitem</span> <span class="na">id=</span><span class="s">&quot;mail_feeds_main&quot;</span> <span class="na">name=</span><span class="s">&quot;Feeds&quot;</span> <span class="na">sequence=</span><span class="s">&quot;0&quot;</span>
+    <span class="na">web_icon=</span><span class="s">&quot;static/src/img/feeds.png&quot;</span>
+    <span class="na">web_icon_hover=</span><span class="s">&quot;static/src/img/feeds-hover.png&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;mail_feeds_main&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.ui.menu&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;action&quot;</span> <span class="na">ref=</span><span class="s">&quot;action_mail_all_feeds&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="actions">
+<h2>Actions<a class="headerlink" href="#actions" title="Permalink to this headline">¶</a></h2>
+<p>The actions define the behavior of the system in response to the actions
+of the users ; login of a new user, double-click on an invoice, click on the action button, ...</p>
+<p>There are different types of simple actions:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>Window</strong>: Opening of a new window</p>
+</li>
+<li><dl class="first docutils">
+<dt><strong>Report</strong>: The printing of a report</dt>
+<dd><p class="first last">o Custom Report: The personalized reports
+o RML Report: The XSL:RML reports</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>Execute</strong>: The execution of a method on the server side</p>
+</li>
+<li><p class="first"><strong>Group</strong>: Gather some actions in one group</p>
+</li>
+</ul>
+</div></blockquote>
+<p>The actions are used for the following events:</p>
+<blockquote>
+<div><ul class="simple">
+<li>User connection,</li>
+<li>The user clicks on a menu,</li>
+<li>The user clicks on the icon &#8216;print&#8217; or &#8216;action&#8217;.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="opening-of-the-menu">
+<h3>Opening of the menu<a class="headerlink" href="#opening-of-the-menu" title="Permalink to this headline">¶</a></h3>
+<p>When the user open the option of the menu &#8220;Operations &gt; Partners &gt; Partners Contact&#8221;, the next steps are done to give the user information on the action to undertake.</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Search the action in the IR.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Execution of the action</dt>
+<dd><ol class="first last arabic simple">
+<li>If the action is the type Opening the Window; it indicates to the user that a new window must be opened for a selected object and it gives you the view (form or list) and the filed to use (only the pro-forma invoice).</li>
+<li>The user asks the object and receives information necessary to trace a form; the fields description and the XML view.</li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="user-connection">
+<h3>User connection<a class="headerlink" href="#user-connection" title="Permalink to this headline">¶</a></h3>
+<p>When a new user is connected to the server, the client must search the action to use for the first screen of this user. Generally, this action is: open the menu in the &#8216;Operations&#8217; section.</p>
+<p>The steps are:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Reading of a user file to obtain ACTION_ID</li>
+<li>Reading of the action and execution of this one</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="the-fields">
+<h3>The fields<a class="headerlink" href="#the-fields" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><strong>Action Name</strong></dt>
+<dd>The action name</dd>
+<dt><strong>Action Type</strong></dt>
+<dd>Always &#8216;ir.actions.act_window&#8217;</dd>
+<dt><strong>View Ref</strong></dt>
+<dd>The view used for showing the object</dd>
+<dt><strong>Model</strong></dt>
+<dd>The model of the object to post</dd>
+<dt><strong>Type of View</strong></dt>
+<dd>The type of view (Tree/Form)</dd>
+<dt><strong>Domain Value</strong></dt>
+<dd>The domain that decreases the visible data with this view</dd>
+</dl>
+<div class="section" id="the-view">
+<h4>The view<a class="headerlink" href="#the-view" title="Permalink to this headline">¶</a></h4>
+<p>The view describes how the edition form or the data tree/list appear on screen. The views can be of &#8216;Form&#8217; or &#8216;Tree&#8217; type, according to whether they represent a form for the edition or a list/tree for global data viewing.</p>
+<p>A form can be called by an action opening in &#8216;Tree&#8217; mode. The form view is generally opened from the list mode (like if the user pushes on &#8216;switch view&#8217;).</p>
+</div>
+<div class="section" id="the-domain">
+<span id="domains"></span><span id="domain"></span><h4>The domain<a class="headerlink" href="#the-domain" title="Permalink to this headline">¶</a></h4>
+<p>This parameter allows you to regulate which resources are visible in a selected view.(restriction)</p>
+<p>For example, in the invoice case, you can define an action that opens a view that shows only invoices not paid.</p>
+<p>The domains are written in python; list of tuples. The tuples have three elements;</p>
+<blockquote>
+<div><ul class="simple">
+<li>the field on which the test must be done</li>
+<li>the operator used for the test (&lt;, &gt;, =, like)</li>
+<li>the tested value</li>
+</ul>
+</div></blockquote>
+<p>For example, if you want to obtain only &#8216;Draft&#8217; invoice, use the following domain; [(&#8216;state&#8217;,&#8217;=&#8217;,&#8217;draft&#8217;)]</p>
+<p>In the case of a simple view, the domain define the resources which are the roots of the tree. The other resources, even if they are not from a part of the domain will be posted if the user develop the branches of the tree.</p>
+</div>
+<div class="section" id="window-action">
+<h4>Window Action<a class="headerlink" href="#window-action" title="Permalink to this headline">¶</a></h4>
+<p>Actions are explained in more detail in section &#8220;Administration Modules - Actions&#8221;. Here&#8217;s the template of an action XML record :</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;record model=&quot;ir.actions.act_window&quot; id=&quot;action_id_1&quot;&gt;
+    &lt;field name=&quot;name&quot;&gt;action.name&lt;/field&gt;
+    &lt;field name=&quot;view_id&quot; ref=&quot;view_id_1&quot;/&gt;
+    &lt;field name=&quot;domain&quot;&gt;[&quot;list of 3-tuples (max 250 characters)&quot;]&lt;/field&gt;
+    &lt;field name=&quot;context&quot;&gt;{&quot;context dictionary (max 250 characters)&quot;}&lt;/field&gt;
+    &lt;field name=&quot;res_model&quot;&gt;Open.object&lt;/field&gt;
+    &lt;field name=&quot;view_type&quot;&gt;form|tree&lt;/field&gt;
+    &lt;field name=&quot;view_mode&quot;&gt;form,tree|tree,form|form|tree&lt;/field&gt;
+    &lt;field name=&quot;usage&quot;&gt;menu&lt;/field&gt;
+    &lt;field name=&quot;target&quot;&gt;new&lt;/field&gt;
+&lt;/record&gt;
+</pre></div>
+</div>
+<p><strong>Where</strong></p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>id</strong> is the identifier of the action in the table &#8220;ir.actions.act_window&#8221;. It must be unique.</p>
+</li>
+<li><p class="first"><strong>name</strong> is the name of the action (mandatory).</p>
+</li>
+<li><p class="first"><strong>view_id</strong> is the name of the view to display when the action is activated. If this field is not defined, the view of a kind (list or form) associated to the object res_model with the highest priority field is used (if two views have the same priority, the first defined view of a kind is used).</p>
+</li>
+<li><p class="first"><strong>domain</strong> is a list of constraints used to refine the results of a selection, and hence to get less records displayed in the view. Constraints of the list are linked together with an AND clause : a record of the table will be displayed in the view only if all the constraints are satisfied.</p>
+</li>
+<li><p class="first"><strong>context</strong> is the context dictionary which will be visible in the view that will be opened when the action is activated. Context dictionaries are declared with the same syntax as Python dictionaries in the XML file. For more information about context dictionaries, see section &#8221; The context Dictionary&#8221;.</p>
+</li>
+<li><p class="first"><strong>res_model</strong> is the name of the object on which the action operates.</p>
+</li>
+<li><p class="first"><strong>view_type</strong> is set to form when the action must open a new form view, and is set to tree when the action must open a new tree view.</p>
+</li>
+<li><dl class="first docutils">
+<dt><strong>view_mode</strong> is only considered if view_type is form, and ignored otherwise. The four possibilities are :</dt>
+<dd><ul class="first last simple">
+<li><strong>form,tree</strong> : the view is first displayed as a form, the list view can be displayed by clicking the &#8220;alternate view button&#8221; ;</li>
+<li><strong>tree,form</strong> : the view is first displayed as a list, the form view can be displayed by clicking the &#8220;alternate view button&#8221; ;</li>
+<li><strong>form</strong> : the view is displayed as a form and there is no way to switch to list view ;</li>
+<li><strong>tree</strong> : the view is displayed as a list and there is no way to switch to form view.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>(version 5 introduced <strong>graph</strong> and <strong>calendar</strong> views)</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>usage</strong> is used [+ <strong>*TODO*</strong> +]</p>
+</li>
+<li><p class="first"><strong>target</strong> the view will open in new window like wizard.</p>
+</li>
+<li><p class="first"><strong>context</strong> will be passed to the action itself and added to its global context</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.actions.act_window&quot;</span> <span class="na">id=</span><span class="s">&quot;a&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>account.account.tree1<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;res_model&quot;</span><span class="nt">&gt;</span>account.account<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_type&quot;</span><span class="nt">&gt;</span>tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_mode&quot;</span><span class="nt">&gt;</span>form,tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;v&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;domain&quot;</span><span class="nt">&gt;</span>[(&#39;code&#39;,&#39;=&#39;,&#39;0&#39;)]<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;context&quot;</span><span class="nt">&gt;</span>{&#39;project_id&#39;: active_id}<span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>They indicate at the user that he has to open a new window in a new &#8216;tab&#8217;.</p>
+<p>Administration &gt; Custom &gt; Low Level &gt; Base &gt; Action &gt; Window Actions</p>
+</div>
+</div>
+<div class="section" id="examples-of-actions">
+<h3>Examples of actions<a class="headerlink" href="#examples-of-actions" title="Permalink to this headline">¶</a></h3>
+<p>This action is declared in server/bin/addons/project/project_view.xml.</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;record model=&quot;ir.actions.act_window&quot; id=&quot;open_view_my_project&quot;&gt;
+    &lt;field name=&quot;name&quot;&gt;project.project&lt;/field&gt;
+    &lt;field name=&quot;res_model&quot;&gt;project.project&lt;/field&gt;
+    &lt;field name=&quot;view_type&quot;&gt;tree&lt;/field&gt;
+    &lt;field name=&quot;domain&quot;&gt;[(&#39;parent_id&#39;,&#39;=&#39;,False), (&#39;manager&#39;, &#39;=&#39;, uid)]&lt;/field&gt;
+    &lt;field name=&quot;view_id&quot; ref=&quot;view_my_project&quot; /&gt;
+&lt;/record&gt;
+</pre></div>
+</div>
+<p>This action is declared in server/bin/addons/stock/stock_view.xml.</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;record model=&quot;ir.actions.act_window&quot; id=&quot;action_picking_form&quot;&gt;
+    &lt;field name=&quot;name&quot;&gt;stock.picking&lt;/field&gt;
+    &lt;field name=&quot;res_model&quot;&gt;stock.picking&lt;/field&gt;
+    &lt;field name=&quot;type&quot;&gt;ir.actions.act_window&lt;/field&gt;
+    &lt;field name=&quot;view_type&quot;&gt;form&lt;/field&gt;
+    &lt;field name=&quot;view_id&quot; ref=&quot;view_picking_form&quot;/&gt;
+    &lt;field name=&quot;context&quot;&gt;{&#39;contact_display&#39;: &#39;partner&#39;}&lt;/field&gt;
+&lt;/record&gt;
+</pre></div>
+</div>
+<div class="section" id="url-action">
+<h4>Url Action<a class="headerlink" href="#url-action" title="Permalink to this headline">¶</a></h4>
+</div>
+<div class="section" id="report-action">
+<h4>Report Action<a class="headerlink" href="#report-action" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+<div class="section" id="report-declaration">
+<h3>Report declaration<a class="headerlink" href="#report-declaration" title="Permalink to this headline">¶</a></h3>
+<p>Reports in OpenERP are explained in chapter &#8220;Reports Reporting&#8221;. Here&#8217;s an example of a XML file that declares a RML report :</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;openerp&gt;
+    &lt;data&gt;
+    &lt;report id=&quot;sale_category_print&quot;
+            string=&quot;Sales Orders By Categories&quot;
+            model=&quot;sale.order&quot;
+            name=&quot;sale_category.print&quot;
+            rml=&quot;sale_category/report/sale_category_report.rml&quot;
+            menu=&quot;True&quot;
+            auto=&quot;False&quot;/&gt;
+     &lt;/data&gt;
+&lt;/openerp&gt;
+</pre></div>
+</div>
+<p>A report is declared using a <strong>report tag</strong> inside a &#8220;data&#8221; block. The different arguments of a report tag are :</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>id</strong> : an identifier which must be unique.</li>
+<li><strong>string</strong> : the text of the menu that calls the report (if any, see below).</li>
+<li><strong>model</strong> : the OpenERP object on which the report will be rendered.</li>
+<li><strong>rml</strong> : the .RML report model. Important Note : Path is relative to addons/ directory.</li>
+<li><strong>menu</strong> : whether the report will be able to be called directly via the client or not. Setting menu to False is useful in case of reports called by wizards.</li>
+<li><strong>auto</strong> : determines if the .RML file must be parsed using the default parser or not. Using a custom parser allows you to define additional functions to your report.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="action-creation">
+<h4>Action creation<a class="headerlink" href="#action-creation" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+<div class="section" id="linking-events-to-action">
+<h3>Linking events to action<a class="headerlink" href="#linking-events-to-action" title="Permalink to this headline">¶</a></h3>
+<p>The available type of events are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>client_print_multi</strong> (print from a list or form)</li>
+<li><strong>client_action_multi</strong> (action from a list or form)</li>
+<li><strong>tree_but_open</strong> (double click on the item of a tree, like the menu)</li>
+<li><strong>tree_but_action</strong> (action on the items of a tree)</li>
+</ul>
+</div></blockquote>
+<p>To map an events to an action:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.values&quot;</span> <span class="na">id=</span><span class="s">&quot;ir_open_journal_period&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;key2&quot;</span><span class="nt">&gt;</span>tree_but_open<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>account.journal.period<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>Open Journal<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">eval=</span><span class="s">&quot;&#39;ir.actions.wizard,%d&#39;%action_move_journal_line_form_select&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;object&quot;</span> <span class="na">eval=</span><span class="s">&quot;True&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>If you double click on a journal/period (object: account.journal.period), this will open the selected wizard. (id=&#8221;action_move_journal_line_form_select&#8221;).</p>
+<p>You can use a res_id field to allow this action only if the user click on a specific object.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.values&quot;</span> <span class="na">id=</span><span class="s">&quot;ir_open_journal_period&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;key2&quot;</span><span class="nt">&gt;</span>tree_but_open<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>account.journal.period<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>Open Journal<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">eval=</span><span class="s">&quot;&#39;ir.actions.wizard,%d&#39;%action_move_journal_line_form_select&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;res_id&quot;</span> <span class="na">eval=</span><span class="s">&quot;3&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;object&quot;</span> <span class="na">eval=</span><span class="s">&quot;True&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>The action will be triggered if the user clicks on the account.journal.period n°3.</p>
+<p>When you declare wizard, report or menus, the ir.values creation is automatically made with these tags:</p>
+<blockquote>
+<div><ul class="simple">
+<li>&lt;menuitem... /&gt;</li>
+<li>&lt;report... /&gt;</li>
+</ul>
+</div></blockquote>
+<p>So you usually do not need to add the mapping by yourself.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Menus and Actions</a><ul>
+<li><a class="reference internal" href="#menus">Menus</a></li>
+<li><a class="reference internal" href="#actions">Actions</a><ul>
+<li><a class="reference internal" href="#opening-of-the-menu">Opening of the menu</a></li>
+<li><a class="reference internal" href="#user-connection">User connection</a></li>
+<li><a class="reference internal" href="#the-fields">The fields</a><ul>
+<li><a class="reference internal" href="#the-view">The view</a></li>
+<li><a class="reference internal" href="#the-domain">The domain</a></li>
+<li><a class="reference internal" href="#window-action">Window Action</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples-of-actions">Examples of actions</a><ul>
+<li><a class="reference internal" href="#url-action">Url Action</a></li>
+<li><a class="reference internal" href="#report-action">Report Action</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#report-declaration">Report declaration</a><ul>
+<li><a class="reference internal" href="#action-creation">Action creation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#linking-events-to-action">Linking events to action</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="03_module_dev.html">Modules</a><ul>
+      <li>Previous: <a href="03_module_dev_03.html" title="previous chapter">Views and Events</a></li>
+      <li>Next: <a href="03_module_dev_05.html" title="next chapter">Example of module creation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/03_module_dev_04.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

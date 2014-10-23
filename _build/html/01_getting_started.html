@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting started with OpenERP development &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="next" title="Architecture" href="02_architecture.html" />
+    <link rel="prev" title="OpenERP Server Developers Documentation" href="index.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="02_architecture.html" title="Architecture"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="OpenERP Server Developers Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started-with-openerp-development">
+<h1>Getting started with OpenERP development<a class="headerlink" href="#getting-started-with-openerp-development" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="installation-from-sources">
+<h2>Installation from sources<a class="headerlink" href="#installation-from-sources" title="Permalink to this headline">¶</a></h2>
+<p id="getting-started-installation-source-link">Source code is hosted on <a class="reference external" href="https://launchpad.net/">Launchpad</a>. In order to get the sources, you
+will need <a class="reference external" href="http://bazaar.canonical.com/en/">Bazaar</a> to pull the source from Launchpad. Bazaar is a
+version control system that helps you track project history over time
+and collaborate efficiently. You may have to create an account on
+Launchpad to be able to collaborate on OpenERP development. Please
+refer to the Launchpad and Bazaar documentation to install and setup
+your development environment.</p>
+<p>The running example of this section is based on an Ubuntu
+environment. You may have to adapt the steps according to your
+system. Once your working environment is ready, prepare a working
+directory that will contain the sources.  For a <code class="docutils literal"><span class="pre">source</span></code> base
+directory, type:</p>
+<div class="highlight-python"><div class="highlight"><pre>mkdir source;cd source
+</pre></div>
+</div>
+<p>OpenERP provides a setup script that automatizes the tasks of creating
+a shared repository and getting the source code. Get the setup script
+of OpenERP by typing:</p>
+<div class="highlight-python"><div class="highlight"><pre>bzr cat -d lp:~openerp-dev/openerp-tools/trunk setup.sh | sh
+</pre></div>
+</div>
+<p>This will create the following two files in your <code class="docutils literal"><span class="pre">source</span></code> directory:</p>
+<div class="highlight-python"><div class="highlight"><pre>-rw-rw-r--  1 openerp openerp 5465 2012-04-17 11:05 Makefile
+-rw-rw-r--  1 openerp openerp 2902 2012-04-17 11:05 Makefile_helper.py
+</pre></div>
+</div>
+<p>If you want some help about the available options, please type:</p>
+<div class="highlight-python"><div class="highlight"><pre>make help
+</pre></div>
+</div>
+<p>Next step is to initialize the shared repository and download the
+sources. Get the current trunk version of OpenERP by typing:</p>
+<div class="highlight-python"><div class="highlight"><pre>make init-trunk
+</pre></div>
+</div>
+<p>This will create the following structure inside your <code class="docutils literal"><span class="pre">source</span></code>
+directory, and fetch the latest source code from <code class="docutils literal"><span class="pre">trunk</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>drwxrwxr-x  3 openerp openerp 4096 2012-04-17 11:10 addons
+drwxrwxr-x  3 openerp openerp 4096 2012-04-17 11:10 misc
+drwxrwxr-x  3 openerp openerp 4096 2012-04-17 11:10 server
+drwxrwxr-x  3 openerp openerp 4096 2012-04-17 11:10 web
+</pre></div>
+</div>
+<p>Some dependencies are necessary to use OpenERP. Depending on your
+environment, you might have to install the following packages:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo apt-get install graphviz ghostscript postgresql-client \
+          python-dateutil python-feedparser python-gdata \
+          python-ldap python-libxslt1 python-lxml python-mako \
+          python-openid python-psycopg2 python-pybabel python-pychart \
+          python-pydot python-pyparsing python-reportlab python-simplejson \
+          python-tz python-vatnumber python-vobject python-webdav \
+          python-werkzeug python-xlwt python-yaml python-imaging \
+          python-matplotlib
+</pre></div>
+</div>
+<p>Next step is to initialize the database. This will create a new openerp role:</p>
+<div class="highlight-python"><div class="highlight"><pre>make db-setup
+</pre></div>
+</div>
+<p>Finally, launch the OpenERP server:</p>
+<div class="highlight-python"><div class="highlight"><pre>make server
+</pre></div>
+</div>
+<p>Testing your installation can be done on <a class="reference external" href="http://localhost:8069/">http://localhost:8069/</a>. You
+should see the OpenERP main login page.</p>
+</div>
+<div class="section" id="command-line-options">
+<h2>Command line options<a class="headerlink" href="#command-line-options" title="Permalink to this headline">¶</a></h2>
+<p>Using the command</p>
+<div class="highlight-python"><div class="highlight"><pre>./openerp-server --help
+</pre></div>
+</div>
+<div class="section" id="general-options">
+<h3>General Options<a class="headerlink" href="#general-options" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>--version                           show program version number and exit
+-h, --help                          show this help message and exit
+-c CONFIG, --config=CONFIG          specify alternate config file
+-s, --save                          save configuration to ~/.terp_serverrc
+-v, --verbose                       enable debugging
+--pidfile=PIDFILE                   file where the server pid will be stored
+--logfile=LOGFILE                   file where the server log will be stored
+-n INTERFACE, --interface=INTERFACE specify the TCP IP address
+-p PORT, --port=PORT                specify the TCP port
+--net_interface=NETINTERFACE        specify the TCP IP address for netrpc
+--net_port=NETPORT                  specify the TCP port for netrpc
+--no-netrpc                         disable netrpc
+--no-xmlrpc                         disable xmlrpc
+-i INIT, --init=INIT                init a module (use &quot;all&quot; for all modules)
+--without-demo=WITHOUT_DEMO         load demo data for a module (use &quot;all&quot; for all modules)
+-u UPDATE, --update=UPDATE          update a module (use &quot;all&quot; for all modules)
+--stop-after-init                   stop the server after it initializes
+--debug                             enable debug mode
+-S, --secure                        launch server over https instead of http
+--smtp=SMTP_SERVER                  specify the SMTP server for sending mail
+</pre></div>
+</div>
+</div>
+<div class="section" id="database-related-options">
+<h3>Database related options<a class="headerlink" href="#database-related-options" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>-d DB_NAME, --database=DB_NAME
+                      specify the database name
+-r DB_USER, --db_user=DB_USER
+                      specify the database user name
+-w DB_PASSWORD, --db_password=DB_PASSWORD
+                      specify the database password
+--pg_path=PG_PATH   specify the pg executable path
+--db_host=DB_HOST   specify the database host
+--db_port=DB_PORT   specify the database port
+</pre></div>
+</div>
+</div>
+<div class="section" id="internationalization-options">
+<h3>Internationalization options<a class="headerlink" href="#internationalization-options" title="Permalink to this headline">¶</a></h3>
+<p>Use these options to translate OpenERP to another language.See i18n
+section of the user manual. Option &#8216;-l&#8217; is mandatory.:</p>
+<div class="highlight-python"><div class="highlight"><pre>-l LANGUAGE, --language=LANGUAGE
+                     specify the language of the translation file. Use it
+                     with --i18n-export and --i18n-import
+--i18n-export=TRANSLATE_OUT
+                     export all sentences to be translated to a CSV file
+                     and exit
+--i18n-import=TRANSLATE_IN
+                     import a CSV file with translations and exit
+--modules=TRANSLATE_MODULES
+                     specify modules to export. Use in combination with
+                     --i18n-export
+</pre></div>
+</div>
+</div>
+<div class="section" id="options-from-previous-versions">
+<h3>Options from previous versions<a class="headerlink" href="#options-from-previous-versions" title="Permalink to this headline">¶</a></h3>
+<p>Some options were removed in OpenERP version 6. For example,
+<code class="docutils literal"><span class="pre">price_accuracy</span></code> is now configured through the
+<em class="xref std std-ref">decimal_accuracy</em> screen.</p>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p id="getting-started-configuration-link">Two configuration files are available:</p>
+<blockquote>
+<div><ul class="simple">
+<li>one for the client: <code class="docutils literal"><span class="pre">~/.openerprc</span></code></li>
+<li>one for the server: <code class="docutils literal"><span class="pre">~/.openerp_serverrc</span></code></li>
+</ul>
+</div></blockquote>
+<p>If they are not found, the server and the client will start with a
+default configuration. Those files follow the convention used by
+python&#8217;s ConfigParser module. Please note that lines beginning with
+&#8220;#&#8221; or &#8221;;&#8221; are comments. The client configuration file is
+automatically generated upon the first start. The sezrver
+configuration file can automatically be created using the command</p>
+<div class="highlight-python"><div class="highlight"><pre>./openerp-server -s or ./openerp-server --save
+</pre></div>
+</div>
+<p>You can specify alternate configuration files with</p>
+<div class="highlight-python"><div class="highlight"><pre>-c CONFIG, --config=CONFIG specify alternate config file
+</pre></div>
+</div>
+<div class="section" id="configure-addons-locations">
+<h3>Configure addons locations<a class="headerlink" href="#configure-addons-locations" title="Permalink to this headline">¶</a></h3>
+<p>By default, the only directory of addons known by the server is
+server/bin/addons. It is possible to add new addons by</p>
+<blockquote>
+<div><ul class="simple">
+<li>copying them in server/bin/addons, or creating a symbolic link to
+each of them in this directory, or</li>
+<li>specifying another directory containing addons to the server. The
+later can be accomplished either by running the server with the
+<code class="docutils literal"><span class="pre">--addons-path=</span></code> option, or by configuring this option in the
+openerp_serverrc file, automatically generated under Linux in your
+home directory by the server when executed with the <code class="docutils literal"><span class="pre">--save</span></code>
+option. You can provide several addons to the <code class="docutils literal"><span class="pre">addons_path</span></code> =
+option, separating them using commas.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="start-up-script">
+<h2>Start-up script<a class="headerlink" href="#start-up-script" title="Permalink to this headline">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 6.1.</span></p>
+</div>
+<p>To run the OpenERP server, the conventional approach is to use the
+<cite>openerp-server</cite> script.  It loads the <em class="xref std std-ref">openerp library</em>, sets a
+few configuration variables corresponding to command-line arguments,
+and starts to listen to incoming connections from clients.</p>
+<p>Depending on your deployment needs, you can write such a start-up script very
+easily. We also recommend you take a look at an alternative tool called
+<cite>openerp-command</cite> that can, among other things, launch the server.</p>
+<p>Yet another alternative is to use a WSGI-compatible HTTP server and let it call
+into one of the WSGI entry points of the server.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting started with OpenERP development</a><ul>
+<li><a class="reference internal" href="#installation-from-sources">Installation from sources</a></li>
+<li><a class="reference internal" href="#command-line-options">Command line options</a><ul>
+<li><a class="reference internal" href="#general-options">General Options</a></li>
+<li><a class="reference internal" href="#database-related-options">Database related options</a></li>
+<li><a class="reference internal" href="#internationalization-options">Internationalization options</a></li>
+<li><a class="reference internal" href="#options-from-previous-versions">Options from previous versions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li><a class="reference internal" href="#configure-addons-locations">Configure addons locations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#start-up-script">Start-up script</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">OpenERP Server Developers Documentation</a></li>
+      <li>Next: <a href="02_architecture.html" title="next chapter">Architecture</a></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/01_getting_started.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

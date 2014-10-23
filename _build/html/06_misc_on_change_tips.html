@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>On Change Methods &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Miscellanous" href="06_misc.html" />
+    <link rel="next" title="Font style in list views" href="06_misc_list_font_style.html" />
+    <link rel="prev" title="Miscellanous" href="06_misc.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="06_misc_list_font_style.html" title="Font style in list views"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc.html" title="Miscellanous"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="06_misc.html" accesskey="U">Miscellanous</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="on-change-methods">
+<span id="on-change-tips"></span><h1>On Change Methods<a class="headerlink" href="#on-change-methods" title="Permalink to this headline">¶</a></h1>
+<p>Definition of on change methods in a view looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;field name=&quot;name&quot; on_change=&quot;name_change(name, address, city)&quot;/&gt;
+</pre></div>
+</div>
+<p>And here is the corresponding method in the model:</p>
+<div class="highlight-python"><div class="highlight"><pre>def name_change(self, cr, uid, ids, name, address, city, context=None):
+    ...
+    return {
+        &#39;value&#39;: {
+            &#39;address&#39;: ...
+            &#39;city&#39;: ...
+        }
+    }
+</pre></div>
+</div>
+<p>On change methods can be confusing when people use them, here are a list of clarifications to avoid any misconception:</p>
+<ul>
+<li><p class="first">On change methods can be executed during the creation of a row, long before it is effectively saved into the database.</p>
+</li>
+<li><p class="first">Fields are <em>not</em> validated before going through a on change methods. As an example, a field marqued as required can be False.</p>
+</li>
+<li><p class="first">On change methods can read data in the database but should <em>never</em> attempt to write anything, this is always a strong conception
+problem.</p>
+</li>
+<li><p class="first">The format of the values passed to an on change method is exactly the same than the one passed to the write() method. So
+the on change method must be able to handle any format used for all the fields it process. The following list describe some fields
+that can have an unusual format.</p>
+<ul>
+<li><p class="first"><em>float</em>: Due to the way JSON represents numbers and the way the JSON library of Python handles it, a float field will not always
+be represented as a python float type. When the number can be represented as an integer it will appear as a python integer type.
+This can be a problem when using some mathematical operations (example: price / 2), so it is a good practice to always cast any number
+to float when you want to handle floats in on change methods.</p>
+</li>
+<li><p class="first"><em>one2many and many2many</em>: There are plenty of misconception about x2many fields in on change methods. The reality is, in fact, quite
+complex. x2many are defined by a list of operations, each operation was given a number (0 -&gt; create, 1 -&gt; write, ect...) and has
+its own semantic. To be able to use one2many and many2many in on change methods, you are strongly encourage to use the
+resolve_2many_commands() method. Here is a sample usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_2many_commands</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="s">&#39;my_o2m&#39;</span><span class="p">,</span> <span class="n">my_o2m_values</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;price&#39;</span><span class="p">,</span> <span class="s">&#39;tax&#39;</span><span class="p">],</span> <span class="n">context</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code will convert the complex list of operations that makes the o2m value into a simple list of dictionaries containing the fields
+&#8216;price&#8217; and &#8216;tax&#8217;, which is way simpler to handle in most on change methods. Please note that you can also return a list of
+dictionaries as the new value of a one2many, it will replace the actual rows contained in that one2many (but it will also remove the
+previous ones).</p>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="06_misc.html">Miscellanous</a><ul>
+      <li>Previous: <a href="06_misc.html" title="previous chapter">Miscellanous</a></li>
+      <li>Next: <a href="06_misc_list_font_style.html" title="next chapter">Font style in list views</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/06_misc_on_change_tips.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

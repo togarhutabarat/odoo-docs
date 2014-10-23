@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Perfoming joins in select &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Miscellanous" href="06_misc.html" />
+    <link rel="next" title="Deploying with Gunicorn" href="09_deployment.html" />
+    <link rel="prev" title="Bulk Import" href="06_misc_import.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="09_deployment.html" title="Deploying with Gunicorn"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc_import.html" title="Bulk Import"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="06_misc.html" accesskey="U">Miscellanous</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="perfoming-joins-in-select">
+<span id="performing-joins-in-select"></span><h1>Perfoming joins in select<a class="headerlink" href="#perfoming-joins-in-select" title="Permalink to this headline">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 7.0.</span></p>
+</div>
+<p>Starting with OpenERP 7.0, an <code class="docutils literal"><span class="pre">auto_join</span></code> attribute is added on <em>many2one</em> and
+<em>one2many</em> fields. The purpose is to allow the automatic generation of joins in
+select queries. This attribute is set to False by default, therefore not changing
+the default behavior. Please note that we consider this feature as still experimental
+and should be used only if you understand its limitations and targets.</p>
+<p>Without <code class="docutils literal"><span class="pre">_auto_join</span></code>, the behavior of expression.parse() is the same as before.
+Leafs holding a path beginning with many2one or one2many fields perform a search
+on the relational table. The result is then used to replace the leaf content.
+For example, if you have on res.partner a domain like <code class="docutils literal"><span class="pre">[('bank_ids.name',</span>
+<span class="pre">'like',</span> <span class="pre">'foo')]</span></code> with bank_ids linking to res.partner.bank, 3 queries will be
+performed :</p>
+<ul class="simple">
+<li>1 on res_partner_bank, with domain <code class="docutils literal"><span class="pre">[('name',</span> <span class="pre">'=',</span> <span class="pre">'foo')]</span></code>, that returns a
+list of res.partner.bank ids (bids)</li>
+<li>1 on res_partner, with a domain <code class="docutils literal"><span class="pre">['bank_ids',</span> <span class="pre">'in',</span> <span class="pre">bids)]</span></code>, that returns a
+list of res.partner ids (pids)</li>
+<li>1 on res_partner, with a domain <code class="docutils literal"><span class="pre">[('id',</span> <span class="pre">'in',</span> <span class="pre">pids)]</span></code></li>
+</ul>
+<p>When the <code class="docutils literal"><span class="pre">auto_join</span></code> attribute is True on a relational field, the destination
+table will be joined to produce only one query.</p>
+<ul class="simple">
+<li>the relational table is accessed using an alias: <code class="docutils literal"><span class="pre">'&quot;res_partner_bank&quot;</span>
+<span class="pre">as</span> <span class="pre">res_partner__bank_ids</span></code>. The alias is generated using the relational field
+name. This allows to have multiple joins with different join conditions on the
+same table, depending on the domain.</li>
+<li>there is a join condition between the destination table and the main table:
+<code class="docutils literal"><span class="pre">res_partner__bank_ids.&quot;partner_id&quot;=res_partner.&quot;id&quot;</span></code></li>
+<li>the condition is then written on the relational table:
+<code class="docutils literal"><span class="pre">res_partner__bank_ids.&quot;name&quot;</span> <span class="pre">=</span> <span class="pre">'foo'</span></code></li>
+</ul>
+<p>This manipulation is performed in expression.parse(). It checks leafs that
+contain a path, i.e. any domain containing a &#8216;.&#8217;. It then  checks whether the
+first item of the path is a <em>many2one</em> or <em>one2many</em> field with the <code class="docutils literal"><span class="pre">auto_join</span></code>
+attribute set. If set, it adds a join query and recursively analyzes the
+remaining of the leaf, using the same behavior. If the remaining path also holds
+a path with auto_join fields, it will add all tables and add every necessary
+join conditions.</p>
+<p>Chaining joins allows to reduce the number of queries performed, and to avoid
+having too long equivalent leaf replacement in domains. Indeed, the internal
+queries produced by this behavior can be very costly, because they were generally
+select queries without limit that could lead to huge (&#8216;id&#8217;, &#8216;in&#8217;, [...])
+leafs to analyze and execute.</p>
+<p>Some limitations exist on this feature that limits its current use as of version
+7.0. <strong>This feature is therefore considered as experimental, and used
+to speedup some precise bottlenecks in OpenERP</strong>.</p>
+<p>List of known issues and limitations:</p>
+<ul class="simple">
+<li>using <code class="docutils literal"><span class="pre">auto_join</span></code> bypasses the business logic; no name search is performed,
+only direct matches between ids using join conditions</li>
+<li>ir.rules are not taken into account when analyzing and adding the join
+conditions</li>
+</ul>
+<p>List of already-supported corner cases :</p>
+<ul class="simple">
+<li>one2many fields having a domain attribute. Static domains as well as dynamic
+domain are supported</li>
+<li>auto_join leading to functional searchable fields</li>
+</ul>
+<p>Typical use in OpenERP 7.0:</p>
+<ul class="simple">
+<li>in mail module: notification_ids field on mail_message, allowing to speedup
+the display of the various mailboxes</li>
+<li>in mail module: message_ids field on mail_thread, allowing to speedup the
+display of needaction counters and documents having unread messages</li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="06_misc.html">Miscellanous</a><ul>
+      <li>Previous: <a href="06_misc_import.html" title="previous chapter">Bulk Import</a></li>
+      <li>Next: <a href="09_deployment.html" title="next chapter">Deploying with Gunicorn</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/06_misc_auto_join.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

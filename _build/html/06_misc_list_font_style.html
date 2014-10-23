@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Font style in list views &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Miscellanous" href="06_misc.html" />
+    <link rel="next" title="Need action mechanism" href="06_misc_need_action_specs.html" />
+    <link rel="prev" title="On Change Methods" href="06_misc_on_change_tips.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="06_misc_need_action_specs.html" title="Need action mechanism"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc_on_change_tips.html" title="On Change Methods"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="06_misc.html" accesskey="U">Miscellanous</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="font-style-in-list-views">
+<h1>Font style in list views<a class="headerlink" href="#font-style-in-list-views" title="Permalink to this headline">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 7.0.</span></p>
+</div>
+<p>This revision adds font styles in list views. Before this revision it was
+possible to define some colors in list view. This revision allows to define
+the a font style, based on an evaluated Python expression. The definition syntax is
+the same than the colors feature. Supported styles are bold, italic and
+underline.</p>
+<div class="section" id="rng-modification">
+<h2>Rng modification<a class="headerlink" href="#rng-modification" title="Permalink to this headline">¶</a></h2>
+<p>This revision adds the <code class="docutils literal"><span class="pre">fonts</span></code> optional attribute in <code class="docutils literal"><span class="pre">view.rng</span></code>.</p>
+</div>
+<div class="section" id="addon-implementation-example">
+<h2>Addon implementation example<a class="headerlink" href="#addon-implementation-example" title="Permalink to this headline">¶</a></h2>
+<p>In your <code class="docutils literal"><span class="pre">foo</span></code> module, you want to specify that when any record is in <code class="docutils literal"><span class="pre">pending</span></code>
+state then it should be displayed in bold in the list view. Edit your foo_view.xml
+file that define the views, and add the fonts attribute to the tree tag.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tree</span> <span class="na">string=</span><span class="s">&quot;Foo List View&quot;</span> <span class="na">fonts=</span><span class="s">&quot;bold:state==&#39;pending&#39;&quot;</span><span class="nt">&gt;</span>
+  [...]
+<span class="nt">&lt;/tree&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Font style in list views</a><ul>
+<li><a class="reference internal" href="#rng-modification">Rng modification</a></li>
+<li><a class="reference internal" href="#addon-implementation-example">Addon implementation example</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="06_misc.html">Miscellanous</a><ul>
+      <li>Previous: <a href="06_misc_on_change_tips.html" title="previous chapter">On Change Methods</a></li>
+      <li>Next: <a href="06_misc_need_action_specs.html" title="next chapter">Need action mechanism</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/06_misc_list_font_style.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

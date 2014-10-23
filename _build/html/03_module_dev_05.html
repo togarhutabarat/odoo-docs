@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example of module creation &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Modules" href="03_module_dev.html" />
+    <link rel="next" title="Module versioning" href="03_module_dev_06.html" />
+    <link rel="prev" title="Menus and Actions" href="03_module_dev_04.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_06.html" title="Module versioning"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_04.html" title="Menus and Actions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="03_module_dev.html" accesskey="U">Modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="example-of-module-creation">
+<span id="module-dev-example"></span><h1>Example of module creation<a class="headerlink" href="#example-of-module-creation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-the-skeleton-directory">
+<h2>Getting the skeleton directory<a class="headerlink" href="#getting-the-skeleton-directory" title="Permalink to this headline">¶</a></h2>
+<p>Create a <code class="docutils literal"><span class="pre">travel</span></code> directory, that will contain our addon. Create <strong>__init__.py</strong> file and <strong>__openerp__.py</strong> files.</p>
+<p>Edit the <strong>__openerp__.py</strong> module manifest file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;name&quot;</span> <span class="p">:</span> <span class="s">&quot;Travel agency module&quot;</span><span class="p">,</span>
+    <span class="s">&quot;version&quot;</span> <span class="p">:</span> <span class="s">&quot;1.1&quot;</span><span class="p">,</span>
+    <span class="s">&quot;author&quot;</span> <span class="p">:</span> <span class="s">&quot;Tiny&quot;</span><span class="p">,</span>
+    <span class="s">&quot;category&quot;</span> <span class="p">:</span> <span class="s">&quot;Generic Modules/Others&quot;</span><span class="p">,</span>
+    <span class="s">&quot;website&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.openerp.com&quot;</span><span class="p">,</span>
+    <span class="s">&quot;description&quot;</span><span class="p">:</span> <span class="s">&quot;A module to manage hotel bookings and a few other useful features.&quot;</span><span class="p">,</span>
+    <span class="s">&quot;depends&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&quot;base&quot;</span><span class="p">],</span>
+    <span class="s">&quot;init_xml&quot;</span> <span class="p">:</span> <span class="p">[],</span>
+    <span class="s">&quot;update_xml&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&quot;travel_view.xml&quot;</span><span class="p">],</span>
+    <span class="s">&quot;active&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="s">&quot;installable&quot;</span><span class="p">:</span> <span class="bp">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="changing-the-main-module-file">
+<h2>Changing the main module file<a class="headerlink" href="#changing-the-main-module-file" title="Permalink to this headline">¶</a></h2>
+<p>Now you need to update the travel.py script to suit the needs of your module.
+We suggest you follow the Flash tutorial for this or download the travel agency
+module from the 20 minutes tutorial page.</p>
+<div class="highlight-python"><div class="highlight"><pre>The documentation below is overlapping the two next step in this wiki tutorial,
+so just consider them as a help and head towards the next two pages first...
+</pre></div>
+</div>
+<p>The travel.py file should initially look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">osv</span> <span class="kn">import</span> <span class="n">osv</span><span class="p">,</span> <span class="n">fields</span>
+
+<span class="k">class</span> <span class="nc">travel_hostel</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+       <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;travel.hostel&#39;</span>
+       <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;res.partner&#39;</span>
+       <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+       <span class="s">&#39;rooms_id&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">one2many</span><span class="p">(</span><span class="s">&#39;travel.room&#39;</span><span class="p">,</span> <span class="s">&#39;hostel_id&#39;</span><span class="p">,</span> <span class="s">&#39;Rooms&#39;</span><span class="p">),</span>
+       <span class="s">&#39;quality&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">char</span><span class="p">(</span><span class="s">&#39;Quality&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+       <span class="p">}</span>
+       <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+       <span class="p">}</span>
+<span class="n">travel_hostel</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Ideally, you would copy that bunch of code several times to create all the
+entities you need (travel_airport, travel_room, travel_flight). This is what
+will hold the database structure of your objects, but you don&#8217;t really need to
+worry too much about the database side. Just filling this file will create the
+system structure for you when you install the module.</p>
+</div>
+<div class="section" id="customizing-the-view">
+<h2>Customizing the view<a class="headerlink" href="#customizing-the-view" title="Permalink to this headline">¶</a></h2>
+<p>You can now move on to editing the views. To do this, edit the custom_view.xml file. It should first look like this:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;openerp&gt;</span>
+<span class="nt">&lt;data&gt;</span>
+    <span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;res.groups&quot;</span> <span class="na">id=</span><span class="s">&quot;group_compta_user&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>grcompta<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;/record&gt;</span>
+    <span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;res.groups&quot;</span> <span class="na">id=</span><span class="s">&quot;group_compta_admin&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>grcomptaadmin<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;/record&gt;</span>
+    <span class="nt">&lt;menuitem</span> <span class="na">name=</span><span class="s">&quot;Administration&quot;</span> <span class="na">groups=</span><span class="s">&quot;admin,grcomptaadmin&quot;</span>
+                    <span class="na">icon=</span><span class="s">&quot;terp-stock&quot;</span> <span class="na">id=</span><span class="s">&quot;menu_admin_compta&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/data&gt;</span>
+<span class="nt">&lt;/openerp&gt;</span>
+</pre></div>
+</div>
+<p>This is, as you can see, an example taken from an accounting system (French
+people call accounting &#8220;comptabilité&#8221;, which explains the compta bit).</p>
+<p>Defining a view is defining the interfaces the user will get when accessing
+your module. Just defining a bunch of fields here should already get you
+started on a complete interface. However, due to the complexity of doing it
+right, we recommend, once again, that download the travel agency module example
+from this link <a class="reference external" href="http://apps.openerp.com/">http://apps.openerp.com/</a></p>
+<p>Next you should be able to create different views using other files to separate
+them from your basic/admin view.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Example of module creation</a><ul>
+<li><a class="reference internal" href="#getting-the-skeleton-directory">Getting the skeleton directory</a></li>
+<li><a class="reference internal" href="#changing-the-main-module-file">Changing the main module file</a></li>
+<li><a class="reference internal" href="#customizing-the-view">Customizing the view</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="03_module_dev.html">Modules</a><ul>
+      <li>Previous: <a href="03_module_dev_04.html" title="previous chapter">Menus and Actions</a></li>
+      <li>Next: <a href="03_module_dev_06.html" title="next chapter">Module versioning</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/03_module_dev_05.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

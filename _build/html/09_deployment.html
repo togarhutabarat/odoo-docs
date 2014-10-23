@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deploying with Gunicorn &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="next" title="ORM and models" href="api_models.html" />
+    <link rel="prev" title="Perfoming joins in select" href="06_misc_auto_join.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api_models.html" title="ORM and models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc_auto_join.html" title="Perfoming joins in select"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="deploying-with-gunicorn">
+<span id="using-gunicorn"></span><h1>Deploying with Gunicorn<a class="headerlink" href="#deploying-with-gunicorn" title="Permalink to this headline">¶</a></h1>
+<p>Starting with OpenERP 6.1, the server and web addons are <a class="reference external" href="http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface">WSGI</a> compliant. In
+particular, support for the <a class="reference external" href="http://gunicorn.org/">Gunicorn</a> HTTP server is available. For some
+background information and motivation, please read <a class="reference external" href="http://www.openerp.com/node/1106">http://www.openerp.com/node/1106</a>.
+To install Gunicorn, please refer to Gunicorn&#8217;s website.</p>
+<div class="section" id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>Configuring and starting an OpenERP server with Gunicorn is straightfoward. The
+different sections below give more details but the following steps are all it
+takes:</p>
+<div class="highlight-python"><div class="highlight"><pre>1. Use a configuration file, passing it to ``gunicorn`` using the ``-c``
+   option.
+2. Within the same configuration file, also configure OpenERP.
+3. Run ``gunicorn openerp:wsgi.core.application -c gunicorn.conf.py``.
+</pre></div>
+</div>
+</div>
+<div class="section" id="sample-configuration-file">
+<h2>Sample configuration file<a class="headerlink" href="#sample-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>A sample <code class="docutils literal"><span class="pre">gunicorn.conf.py</span></code> configuration file for Gunicorn can be found in
+the OpenERP server source tree. It is fairly well commented and easily
+customizable for your own usage. While reading the remaining of this page, it
+is advised you take a look at the sample <code class="docutils literal"><span class="pre">gunicorn.conf.py</span></code> file as it makes
+things easier to follow.</p>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Gunicorn can be configured by a configuration file and/or command-line
+arguments. For a list of available options, you can refer to the official
+Gunicorn documentation <a class="reference external" href="http://gunicorn.org/configure.html">http://gunicorn.org/configure.html</a>.</p>
+<p>When the OpenERP server is started on its own, by using the <code class="docutils literal"><span class="pre">openerp-server</span></code>
+script, it can also be configured by a configuration file or its command-line
+arguments. But when it is run via Gunicorn, it is no longer the case. Instead,
+as the Gunicorn configuration file is a full-fledged Python file, we can
+<code class="docutils literal"><span class="pre">import</span> <span class="pre">openerp</span></code> in it and configure directly the server.</p>
+<p>The principle can be summarized with this three lines (although they are spread
+across the whole sample <code class="docutils literal"><span class="pre">gunicorn.conf.py</span></code> file):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">openerp</span>
+<span class="n">conf</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">config</span>
+<span class="n">conf</span><span class="p">[</span><span class="s">&#39;addons_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;/home/openerp/addons/trunk,/home/openerp/web/trunk/addons&#39;</span>
+</pre></div>
+</div>
+<p>The above three lines first import the <code class="docutils literal"><span class="pre">openerp</span></code> library (i.e. the one
+containing the OpenERP server implementation). The second one is really to
+shorten repeated usage of the same variable. The third one sets a parameter, in
+this case the equivalent of the <code class="docutils literal"><span class="pre">--addons-path</span></code> command-line option.</p>
+<p>Finally, Gunicorn offers a few hooks so we can call our own code at some points
+in its execution. The most important one is the <code class="docutils literal"><span class="pre">on_starting</span></code> hook. It lets
+us properly initialize the <code class="docutils literal"><span class="pre">openerp</span></code> library before Gunicorn starts handling
+requests. <code class="docutils literal"><span class="pre">pre_request</span></code> and <code class="docutils literal"><span class="pre">post_request</span></code> are called before and after
+requests are handled. We provide functions in <code class="docutils literal"><span class="pre">openerp.wsgi.core</span></code> that can be
+used to define those hooks: a typical Gunicorn configuration for OpenERP will
+thus contains:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">on_starting</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">wsgi</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">on_starting</span>
+<span class="n">pre_request</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">wsgi</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">pre_request</span>
+<span class="n">post_request</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">wsgi</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">post_request</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
+<p>Once a proper configuration file is available, running the OpenERP server with
+Gunicorn can be done with the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; gunicorn openerp:wsgi.core.application -c gunicorn.conf.py
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">openerp</span></code> must be importable by Python. The simplest way is to run the above
+command from the server source directory (i.e. the directory containing the
+<code class="docutils literal"><span class="pre">openerp</span></code> module). Alternatively, the module can be installed on your machine
+as a regular Python library or added to your <code class="docutils literal"><span class="pre">PYTHONPATH</span></code>.</p>
+</div>
+<div class="section" id="running-behind-a-reverse-proxy">
+<h2>Running behind a reverse proxy<a class="headerlink" href="#running-behind-a-reverse-proxy" title="Permalink to this headline">¶</a></h2>
+<p>If you intend to run Gunicorn behind a reverse proxy (<a class="reference external" href="http://nginx.org/en/">nginx</a> is recommended),
+an alternative entry point is available in <code class="docutils literal"><span class="pre">openerp.wsgi.proxied</span></code>. That entry
+point uses werkzeug&#8217;s <a class="reference external" href="http://werkzeug.pocoo.org/docs/contrib/fixers/#werkzeug.contrib.fixers.ProxyFix">ProxyFix</a> class to set a few headers. You first have to
+explicitely import that sub-module if you want to use it. So add this line in
+the configuration file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">openerp.wsgi.proxied</span>
+</pre></div>
+</div>
+<p>and then adapt the command-line:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; gunicorn openerp:wsgi.proxied.application -c gunicorn.conf.py
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deploying with Gunicorn</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#sample-configuration-file">Sample configuration file</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#running">Running</a></li>
+<li><a class="reference internal" href="#running-behind-a-reverse-proxy">Running behind a reverse proxy</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="06_misc_auto_join.html" title="previous chapter">Perfoming joins in select</a></li>
+      <li>Next: <a href="api_models.html" title="next chapter">ORM and models</a></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/09_deployment.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

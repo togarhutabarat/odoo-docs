@@ -1,0 +1,1069 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Objects, Fields and Methods &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Modules" href="03_module_dev.html" />
+    <link rel="next" title="Views and Events" href="03_module_dev_03.html" />
+    <link rel="prev" title="Module structure" href="03_module_dev_01.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_03.html" title="Views and Events"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_01.html" title="Module structure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="03_module_dev.html" accesskey="U">Modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="objects-fields-and-methods">
+<span id="module-dev-api"></span><h1>Objects, Fields and Methods<a class="headerlink" href="#objects-fields-and-methods" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="openerp-objects">
+<h2>OpenERP Objects<a class="headerlink" href="#openerp-objects" title="Permalink to this headline">¶</a></h2>
+<p>All the ERP&#8217;s pieces of data are accessible through &#8220;objects&#8221;. As an example, there is a res.partner object to access the data concerning the partners, an account.invoice object for the data concerning the invoices, etc...</p>
+<p>Please note that there is an object for every type of resource, and not an
+object per resource. We have thus a res.partner object to manage all the
+partners and not a <em>res.partner</em> object per partner. If we talk in &#8220;object
+oriented&#8221; terms, we could also say that there is an object per level.</p>
+<p>The direct consequences is that all the methods of objects have a common parameter: the &#8220;ids&#8221; parameter. This specifies on which resources (for example, on which partner) the method must be applied. Precisely, this parameter contains a list of resource ids on which the method must be applied.</p>
+<p>For example, if we have two partners with the identifiers 1 and 5, and we want to call the res_partner method &#8220;send_email&#8221;, we will write something like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">res_partner</span><span class="o">.</span><span class="n">send_email</span><span class="p">(</span><span class="o">...</span> <span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will see the exact syntax of object method calls further in this document.</p>
+<p>In the following section, we will see how to define a new object. Then, we will check out the different methods of doing this.</p>
+<p>For developers:</p>
+<ul class="simple">
+<li>OpenERP &#8220;objects&#8221; are usually called classes in object oriented programming.</li>
+<li>A OpenERP &#8220;resource&#8221; is usually called an object in OO programming, instance of a class.</li>
+</ul>
+<p>It&#8217;s a bit confusing when you try to program inside OpenERP, because the language used is Python, and Python is a fully object oriented language, and has objects and instances ...</p>
+<p>Luckily, an OpenERP &#8220;resource&#8221; can be converted magically into a nice Python object using the &#8220;browse&#8221; class method (OpenERP object method).</p>
+</div>
+<div class="section" id="the-orm-object-relational-mapping-models">
+<h2>The ORM - Object-relational mapping - Models<a class="headerlink" href="#the-orm-object-relational-mapping-models" title="Permalink to this headline">¶</a></h2>
+<p>The ORM, short for Object-Relational Mapping, is a central part of OpenERP.</p>
+<p>In OpenERP, the data model is described and manipulated through Python classes
+and objects. It is the ORM job to bridge the gap &#8211; as transparently as
+possible for the developer &#8211; between Python and the underlying relational
+database (PostgreSQL), which will provide the persistence we need for our
+objects.</p>
+</div>
+<div class="section" id="openerp-object-attributes">
+<h2>OpenERP Object Attributes<a class="headerlink" href="#openerp-object-attributes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="objects-introduction">
+<h3>Objects Introduction<a class="headerlink" href="#objects-introduction" title="Permalink to this headline">¶</a></h3>
+<p>To define a new object, you must define a new Python class then instantiate it. This class must inherit from the osv class in the osv module.</p>
+</div>
+<div class="section" id="object-definition">
+<h3>Object definition<a class="headerlink" href="#object-definition" title="Permalink to this headline">¶</a></h3>
+<p>The first line of the object definition will always be of the form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">name_of_the_object</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+        <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;name.of.the.object&#39;</span>
+        <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span> <span class="o">...</span> <span class="p">}</span>
+        <span class="o">...</span>
+<span class="n">name_of_the_object</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>An object is defined by declaring some fields with predefined names in the
+class. Two of them are required (_name and _columns), the rest are optional.
+The predefined fields are:</p>
+</div>
+<div class="section" id="predefined-fields">
+<h3>Predefined fields<a class="headerlink" href="#predefined-fields" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><cite>_auto</cite></dt>
+<dd>Determines whether a corresponding PostgreSQL table must be generated
+automatically from the object. Setting _auto to False can be useful in case
+of OpenERP objects generated from PostgreSQL views. See the &#8220;Reporting From
+PostgreSQL Views&#8221; section for more details.</dd>
+<dt><cite>_columns (required)</cite></dt>
+<dd>The object fields. See the <a class="reference internal" href="#fields-link"><em>fields</em></a> section for further details.</dd>
+<dt><cite>_constraints</cite></dt>
+<dd>The constraints on the object. See the constraints section for details.</dd>
+<dt><cite>_sql_constraints</cite></dt>
+<dd>The SQL Constraint on the object. See the SQL constraints section for further details.</dd>
+<dt><cite>_defaults</cite></dt>
+<dd>The default values for some of the object&#8217;s fields. See the default value section for details.</dd>
+<dt><cite>_inherit</cite></dt>
+<dd>The name of the osv object which the current object inherits from. See the <a class="reference internal" href="#inherit-link"><em>object inheritance section</em></a>
+(first form) for further details.</dd>
+<dt><cite>_inherits</cite></dt>
+<dd>The list of osv objects the object inherits from. This list must be given in
+a python dictionary of the form: {&#8216;name_of_the_parent_object&#8217;:
+&#8216;name_of_the_field&#8217;, ...}. See the <a class="reference internal" href="#inherits-link"><em>object inheritance section</em></a>
+(second form) for further details. Default value: {}.</dd>
+<dt><cite>_log_access</cite></dt>
+<dd>Determines whether or not the write access to the resource must be logged.
+If true, four fields will be created in the SQL table: create_uid,
+create_date, write_uid, write_date. Those fields represent respectively the
+id of the user who created the record, the creation date of record, the id
+of the user who last modified the record, and the date of that last
+modification. This data may be obtained by using the perm_read method.</dd>
+<dt><cite>_name (required)</cite></dt>
+<dd>Name of the object. Default value: None.</dd>
+<dt><cite>_order</cite></dt>
+<dd><p class="first">Name of the fields used to sort the results of the search and read methods.</p>
+<p>Default value: &#8216;id&#8217;.</p>
+<p>Examples:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">_order</span> <span class="o">=</span> <span class="s">&quot;name&quot;</span>
+<span class="n">_order</span> <span class="o">=</span> <span class="s">&quot;date_order desc&quot;</span>
+</pre></div>
+</div>
+</dd>
+<dt><cite>_rec_name</cite></dt>
+<dd>Name of the field in which the name of every resource is stored. Default
+value: &#8216;name&#8217;. Note: by default, the name_get method simply returns the
+content of this field.</dd>
+<dt><cite>_sequence</cite></dt>
+<dd>Name of the SQL sequence that manages the ids for this object. Default value: None.</dd>
+<dt><cite>_sql</cite></dt>
+<dd>SQL code executed upon creation of the object (only if _auto is True). It means this code gets executed after the table is created.</dd>
+<dt><cite>_table</cite></dt>
+<dd>Name of the SQL table. Default value: the value of the _name field above
+with the dots ( . ) replaced by underscores ( _ ).</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="object-inheritance-inherit">
+<span id="inherit-link"></span><h2>Object Inheritance - _inherit<a class="headerlink" href="#object-inheritance-inherit" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="introduction">
+<h3>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h3>
+<p>Objects may be inherited in some custom or specific modules. It is better to
+inherit an object to add/modify some fields.</p>
+<p>It is done with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">_inherit</span><span class="o">=</span><span class="s">&#39;object.name&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="extension-of-an-object">
+<h3>Extension of an object<a class="headerlink" href="#extension-of-an-object" title="Permalink to this headline">¶</a></h3>
+<p>There are two possible ways to do this kind of inheritance. Both ways result in
+a new class of data, which holds parent fields and behaviour as well as
+additional fields and behaviour, but they differ in heavy programatical
+consequences.</p>
+<p>While Example 1 creates a new subclass &#8220;custom_material&#8221; that may be &#8220;seen&#8221; or
+&#8220;used&#8221; by any view or tree which handles &#8220;network.material&#8221;, this will not be
+the case for Example 2.</p>
+<p>This is due to the table (other.material) the new subclass is operating on,
+which will never be recognized by previous &#8220;network.material&#8221; views or trees.</p>
+<p>Example 1:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">custom_material</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;network.material&#39;</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;network.material&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;manuf_warranty&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">boolean</span><span class="p">(</span><span class="s">&#39;Manufacturer warranty?&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;manuf_warranty&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">custom_material</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Notice</p>
+<p class="last">_name == _inherit</p>
+</div>
+<p>In this example, the &#8216;custom_material&#8217; will add a new field &#8216;manuf_warranty&#8217; to
+the object &#8216;network.material&#8217;. New instances of this class will be visible by
+views or trees operating on the superclasses table &#8216;network.material&#8217;.</p>
+<p>This inheritancy is usually called &#8220;class inheritance&#8221; in Object oriented
+design. The child inherits data (fields) and behavior (functions) of his
+parent.</p>
+<p>Example 2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">other_material</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;other.material&#39;</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;network.material&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;manuf_warranty&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">boolean</span><span class="p">(</span><span class="s">&#39;Manufacturer warranty?&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;manuf_warranty&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">other_material</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Notice</p>
+<p class="last">_name != _inherit</p>
+</div>
+<p>In this example, the &#8216;other_material&#8217; will hold all fields specified by
+&#8216;network.material&#8217; and it will additionally hold a new field &#8216;manuf_warranty&#8217;.
+All those fields will be part of the table &#8216;other.material&#8217;. New instances of
+this class will therefore never been seen by views or trees operating on the
+superclasses table &#8216;network.material&#8217;.</p>
+<p>This type of inheritancy is known as &#8220;inheritance by prototyping&#8221; (e.g.
+Javascript), because the newly created subclass &#8220;copies&#8221; all fields from the
+specified superclass (prototype). The child inherits data (fields) and behavior
+(functions) of his parent.</p>
+</div>
+</div>
+<div class="section" id="inheritance-by-delegation-inherits">
+<span id="inherits-link"></span><h2>Inheritance by Delegation - _inherits<a class="headerlink" href="#inheritance-by-delegation-inherits" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><strong>Syntax :</strong>:</p>
+<div class="highlight-python"><div class="highlight"><pre>class tiny_object(osv.osv)
+    _name = &#39;tiny.object&#39;
+    _table = &#39;tiny_object&#39;
+    _inherits = {
+        &#39;tiny.object_a&#39;: &#39;object_a_id&#39;,
+        &#39;tiny.object_b&#39;: &#39;object_b_id&#39;,
+        ... ,
+        &#39;tiny.object_n&#39;: &#39;object_n_id&#39;
+    }
+    (...)
+</pre></div>
+</div>
+</div></blockquote>
+<p>The object &#8216;tiny.object&#8217; inherits from all the columns and all the methods from
+the n objects &#8216;tiny.object_a&#8217;, ..., &#8216;tiny.object_n&#8217;.</p>
+<p>To inherit from multiple tables, the technique consists in adding one column to
+the table tiny_object per inherited object. This column will store a foreign
+key (an id from another table). The values <em>&#8216;object_a_id&#8217; &#8216;object_b_id&#8217; ...
+&#8216;object_n_id&#8217;</em> are of type string and determine the title of the columns in
+which the foreign keys from &#8216;tiny.object_a&#8217;, ..., &#8216;tiny.object_n&#8217; are stored.</p>
+<p>This inheritance mechanism is usually called &#8221; <em>instance inheritance</em> &#8221;  or  &#8221;
+<em>value inheritance</em> &#8221;. A resource (instance) has the VALUES of its parents.</p>
+</div>
+<div class="section" id="fields-introduction">
+<span id="fields-link"></span><h2>Fields Introduction<a class="headerlink" href="#fields-introduction" title="Permalink to this headline">¶</a></h2>
+<p>Objects may contain different types of fields. Those types can be divided into
+three categories: simple types, relation types and functional fields. The
+simple types are integers, floats, booleans, strings, etc ... ; the relation
+types are used to represent relations between objects (one2one, one2many,
+many2one). Functional fields are special fields because they are not stored in
+the database but calculated in real time given other fields of the view.</p>
+<p>Here&#8217;s the header of the initialization method of the class any field defined
+in OpenERP inherits (as you can see in server/bin/osv/fields.py):</p>
+<div class="highlight-python"><div class="highlight"><pre>def __init__(self, string=&#39;unknown&#39;, required=False, readonly=False,
+             domain=None, context=&quot;&quot;, states=None, priority=0, change_default=False, size=None,
+             ondelete=&quot;set null&quot;, translate=False, select=False, **args) :
+</pre></div>
+</div>
+<p>There are a common set of optional parameters that are available to most field
+types:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">change_default:</th><td class="field-body">Whether or not the user can define default values on other fields depending
+on the value of this field. Those default values need to be defined in
+the ir.values table.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">help:</th><td class="field-body">A description of how the field should be used: longer and more descriptive
+than <cite>string</cite>. It will appear in a tooltip when the mouse hovers over the
+field.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">ondelete:</th><td class="field-body">How to handle deletions in a related record. Allowable values are:
+&#8216;restrict&#8217;, &#8216;no action&#8217;, &#8216;cascade&#8217;, &#8216;set null&#8217;, and &#8216;set default&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">priority:</th><td class="field-body">Not used?</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">readonly:</th><td class="field-body"><cite>True</cite> if the user cannot edit this field, otherwise <cite>False</cite>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">required:</th><td class="field-body"><cite>True</cite> if this field must have a value before the object can be saved,
+otherwise <cite>False</cite>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">size:</th><td class="field-body">The size of the field in the database: number characters or digits.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">states:</th><td class="field-body">Lets you override other parameters for specific states of this object.
+Accepts a dictionary with the state names as keys and a list of name/value
+tuples as the values. For example: <cite>states={&#8216;posted&#8217;:[(&#8216;readonly&#8217;,True)]}</cite></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">string:</th><td class="field-body">The field name as it should appear in a label or column header. Strings
+containing non-ASCII characters must use python unicode objects.
+For example: <cite>&#8216;tested&#8217;: fields.boolean(u&#8217;Testé&#8217;)</cite></td>
+</tr>
+<tr class="field-even field"><th class="field-name">translate:</th><td class="field-body"><cite>True</cite> if the <em>content</em> of this field should be translated, otherwise
+<cite>False</cite>.</td>
+</tr>
+</tbody>
+</table>
+<p>There are also some optional parameters that are specific to some field types:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">context:</th><td class="field-body"><p class="first">Define a variable&#8217;s value visible in the view&#8217;s context or an on-change
+function. Used when searching child table of <cite>one2many</cite> relationship?</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">domain:</th><td class="field-body"><p class="first">Domain restriction on a relational field.</p>
+<p>Default value: [].</p>
+<p>Example: domain=[(&#8216;field&#8217;,&#8217;=&#8217;,value)])</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">invisible:</th><td class="field-body"><p class="first">Hide the field&#8217;s value in forms. For example, a password.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">on_change:</th><td class="field-body"><p class="first">Default value for the <cite>on_change</cite> attribute in the view. This will launch
+a function on the server when the field changes in the client. For example,
+<cite>on_change=&#8221;onchange_shop_id(shop_id)&#8221;</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">relation:</th><td class="field-body"><p class="first">Used when a field is an id reference to another table. This is the name of
+the table to look in. Most commonly used with related and function field
+types.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">select:</th><td class="field-body"><p class="first last">Default value for the <cite>select</cite> attribute in the view. 1 means basic search,
+and 2 means advanced search.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="type-of-fields">
+<h2>Type of Fields<a class="headerlink" href="#type-of-fields" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="basic-types">
+<h3>Basic Types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">boolean:</th><td class="field-body"><p class="first">A boolean (true, false).</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.boolean(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">integer:</th><td class="field-body"><p class="first">An integer.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.integer(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">float:</th><td class="field-body"><p class="first">A floating point number.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.float(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The optional parameter digits defines the precision and scale of the
+number. The scale being the number of digits after the decimal point
+whereas the precision is the total number of significant digits in the
+number (before and after the decimal point). If the parameter digits is
+not present, the number will be a double precision floating point number.
+Warning: these floating-point numbers are inexact (not any value can be
+converted to its binary representation) and this can lead to rounding
+errors. You should always use the digits parameter for monetary amounts.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;rate&#39;: fields.float(
+    &#39;Relative Change rate&#39;,
+    digits=(12,6) [,
+    Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">char:</th><td class="field-body"><p class="first">A string of limited length. The required size parameter determines its size.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.char(
+        &#39;Field Name&#39;,
+        size=n [,
+        Optional Parameters]), # where &#39;&#39;n&#39;&#39; is an integer.
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;city&#39; : fields.char(&#39;City Name&#39;, size=30, required=True),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">text:</th><td class="field-body"><p class="first">A text field with no limit in length.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.text(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">date:</th><td class="field-body"><p class="first">A date.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.date(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">datetime:</th><td class="field-body"><p class="first">Allows to store a date and the time of day in the same field.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.datetime(&#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">binary:</th><td class="field-body"><p class="first">A binary chain</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">selection:</th><td class="field-body"><p class="first">A field which allows the user to make a selection between various predefined values.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.selection(((&#39;n&#39;,&#39;Unconfirmed&#39;), (&#39;c&#39;,&#39;Confirmed&#39;)),
+                   &#39;Field Name&#39; [, Optional Parameters]),
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Format of the selection parameter: tuple of tuples of strings of the form:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="s">&#39;key_or_value&#39;</span><span class="p">,</span> <span class="s">&#39;string_to_display&#39;</span><span class="p">),</span> <span class="o">...</span> <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>You can specify a function that will return the tuple. Example</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">_get_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+       <span class="p">(</span><span class="s">&#39;choice1&#39;</span><span class="p">,</span> <span class="s">&#39;This is the choice 1&#39;</span><span class="p">),</span>
+       <span class="p">(</span><span class="s">&#39;choice2&#39;</span><span class="p">,</span> <span class="s">&#39;This is the choice 2&#39;</span><span class="p">))</span>
+
+<span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s">&#39;sel&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span>
+       <span class="n">_get_selection</span><span class="p">,</span>
+       <span class="s">&#39;What do you want ?&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p><em>Example</em></p>
+<p>Using relation fields <strong>many2one</strong> with <strong>selection</strong>. In fields definitions add:</p>
+<div class="highlight-python"><div class="highlight"><pre>...,
+&#39;my_field&#39;: fields.many2one(
+        &#39;mymodule.relation.model&#39;,
+        &#39;Title&#39;,
+        selection=_sel_func),
+...,
+</pre></div>
+</div>
+<p>And then define the _sel_func like this (but before the fields definitions):</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">_sel_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;mymodule.relation.model&#39;</span><span class="p">)</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">context</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="relational-types">
+<h3>Relational Types<a class="headerlink" href="#relational-types" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">one2one:</th><td class="field-body"><p class="first">A one2one field expresses a one:to:one relation between two objects. It is
+deprecated. Use many2one instead.</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fields</span><span class="o">.</span><span class="n">one2one</span><span class="p">(</span><span class="s">&#39;other.object.name&#39;</span><span class="p">,</span> <span class="s">&#39;Field Name&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">many2one:</th><td class="field-body"><p class="first">Associates this object to a parent object via this Field. For example
+Department an Employee belongs to would Many to one. i.e Many employees will
+belong to a Department</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.many2one(
+        &#39;other.object.name&#39;,
+        &#39;Field Name&#39;,
+        optional parameters)
+</pre></div>
+</div>
+<p>Optional parameters:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>ondelete: What should happen when the resource this field points to is deleted.</dt>
+<dd><ul class="first last simple">
+<li>Predefined value: &#8220;cascade&#8221;, &#8220;set null&#8221;, &#8220;restrict&#8221;, &#8220;no action&#8221;, &#8220;set default&#8221;</li>
+<li>Default value: &#8220;set null&#8221;</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">required: True</p>
+</li>
+<li><p class="first">readonly: True</p>
+</li>
+<li><p class="first">select: True - (creates an index on the Foreign Key field)</p>
+</li>
+</ul>
+</div></blockquote>
+<p><em>Example</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;commercial&#39;: fields.many2one(
+        &#39;res.users&#39;,
+        &#39;Commercial&#39;,
+        ondelete=&#39;cascade&#39;),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">one2many:</th><td class="field-body"><p class="first">TODO</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre>fields.one2many(
+        &#39;other.object.name&#39;,
+        &#39;Field relation id&#39;,
+        &#39;Fieldname&#39;,
+        optional parameter)
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Optional parameters:</dt>
+<dd><ul class="first last simple">
+<li>invisible: True/False</li>
+<li>states: ?</li>
+<li>readonly: True/False</li>
+</ul>
+</dd>
+</dl>
+<p><em>Example</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;address&#39;: fields.one2many(
+        &#39;res.partner.address&#39;,
+        &#39;partner_id&#39;,
+        &#39;Contacts&#39;),
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">many2many:</th><td class="field-body"><p class="first">TODO</p>
+<p>Syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fields</span><span class="o">.</span><span class="n">many2many</span><span class="p">(</span><span class="s">&#39;other.object.name&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;relation object&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;actual.object.id&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;other.object.id&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;Field Name&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Where:</dt>
+<dd><ul class="first last simple">
+<li>other.object.name is the other object which belongs to the relation</li>
+<li>relation object is the table that makes the link</li>
+<li>actual.object.id and other.object.id are the fields&#8217; names used in the relation table</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;category_ids&#39;:
+   fields.many2many(
+    &#39;res.partner.category&#39;,
+    &#39;res_partner_category_rel&#39;,
+    &#39;partner_id&#39;,
+    &#39;category_id&#39;,
+    &#39;Categories&#39;),
+</pre></div>
+</div>
+<p>To make it bidirectional (= create a field in the other object):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">other_object_name2</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;other.object.name&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;other_fields&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">many2many</span><span class="p">(</span>
+            <span class="s">&#39;actual.object.name&#39;</span><span class="p">,</span>
+            <span class="s">&#39;relation object&#39;</span><span class="p">,</span>
+            <span class="s">&#39;actual.object.id&#39;</span><span class="p">,</span>
+            <span class="s">&#39;other.object.id&#39;</span><span class="p">,</span>
+            <span class="s">&#39;Other Field Name&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+<span class="n">other_object_name2</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">res_partner_category2</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;res.partner.category&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;partner_ids&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">many2many</span><span class="p">(</span>
+            <span class="s">&#39;res.partner&#39;</span><span class="p">,</span>
+            <span class="s">&#39;res_partner_category_rel&#39;</span><span class="p">,</span>
+            <span class="s">&#39;category_id&#39;</span><span class="p">,</span>
+            <span class="s">&#39;partner_id&#39;</span><span class="p">,</span>
+            <span class="s">&#39;Partners&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+<span class="n">res_partner_category2</span><span class="p">()</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">related:</th><td class="field-body"><p class="first">Sometimes you need to refer to the relation of a relation. For example,
+supposing you have objects: City -&gt; State -&gt; Country, and you need to refer to
+the Country from a City, you can define a field as below in the City object:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;country_id&#39;: fields.related(
+    &#39;state_id&#39;,
+    &#39;country_id&#39;,
+    type=&quot;many2one&quot;,
+    relation=&quot;res.country&quot;,
+    string=&quot;Country&quot;,
+    store=False)
+</pre></div>
+</div>
+<dl class="last docutils">
+<dt>Where:</dt>
+<dd><ul class="first last simple">
+<li>The first set of parameters are the chain of reference fields to
+follow, with the desired field at the end.</li>
+<li><em class="guilabel">type</em> is the type of that desired field.</li>
+<li>Use <em class="guilabel">relation</em> if the desired field is still some kind of
+reference. <em class="guilabel">relation</em> is the table to look up that
+reference in.</li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functional-fields">
+<h3>Functional Fields<a class="headerlink" href="#functional-fields" title="Permalink to this headline">¶</a></h3>
+<p>A functional field is a field whose value is calculated by a function (rather
+than being stored in the database).</p>
+<p><strong>Parameters:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>fnct, arg=None, fnct_inv=None, fnct_inv_arg=None, type=&quot;float&quot;,
+    fnct_search=None, obj=None, method=False, store=False, multi=False
+</pre></div>
+</div>
+<p>where</p>
+<blockquote>
+<div><ul class="simple">
+<li><em class="guilabel">fnct</em> is the function or method that will compute the field
+value. It must have been declared before declaring the functional field.</li>
+<li><em class="guilabel">fnct_inv</em> is the function or method that will allow writing
+values in that field.</li>
+<li><em class="guilabel">type</em> is the field type name returned by the function. It can
+be any field type name except function.</li>
+<li><em class="guilabel">fnct_search</em> allows you to define the searching behaviour on
+that field.</li>
+<li><em class="guilabel">method</em> whether the field is computed by a method (of an
+object) or a global function</li>
+<li><em class="guilabel">store</em> If you want to store field in database or not. Default
+is False.</li>
+<li><em class="guilabel">multi</em> is a group name. All fields with the same <cite>multi</cite>
+parameter will be calculated in a single function call.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="fnct-parameter">
+<h4>fnct parameter<a class="headerlink" href="#fnct-parameter" title="Permalink to this headline">¶</a></h4>
+<p>If <em>method</em> is True, the signature of the method must be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(self, cr, uid, ids, field_name, arg, context):
+</pre></div>
+</div>
+<p>otherwise (if it is a global function), its signature must be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(cr, table, ids, field_name, arg, context):
+</pre></div>
+</div>
+<p>Either way, it must return a dictionary of values of the form
+<strong>{id&#8217;_1_&#8217;: value&#8217;_1_&#8217;, id&#8217;_2_&#8217;: value&#8217;_2_&#8217;,...}.</strong></p>
+<p>The values of the returned dictionary must be of the type specified by the type
+argument in the field declaration.</p>
+<p>If <em>multi</em> is set, then <em>field_name</em> is replaced by <em>field_names</em>: a list
+of the field names that should be calculated. Each value in the returned
+dictionary is also a dictionary from field name to value. For example, if the
+fields <cite>&#8216;name&#8217;</cite>, and <cite>&#8216;age&#8217;</cite> are both based on the <cite>vital_statistics</cite> function,
+then the return value of <cite>vital_statistics</cite> might look like this when <cite>ids</cite> is
+<cite>[1, 2, 5]</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+    1: {&#39;name&#39;: &#39;Bob&#39;, &#39;age&#39;: 23},
+    2: {&#39;name&#39;: &#39;Sally&#39;, &#39;age&#39;, 19},
+    5: {&#39;name&#39;: &#39;Ed&#39;, &#39;age&#39;: 62}
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="fnct-inv-parameter">
+<h4>fnct_inv parameter<a class="headerlink" href="#fnct-inv-parameter" title="Permalink to this headline">¶</a></h4>
+<p>If <em>method</em> is true, the signature of the method must be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(self, cr, uid, ids, field_name, field_value, arg, context):
+</pre></div>
+</div>
+<p>otherwise (if it is a global function), it should be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(cr, table, ids, field_name, field_value, arg, context):
+</pre></div>
+</div>
+</div>
+<div class="section" id="fnct-search-parameter">
+<h4>fnct_search parameter<a class="headerlink" href="#fnct-search-parameter" title="Permalink to this headline">¶</a></h4>
+<p>If method is true, the signature of the method must be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(self, cr, uid, obj, name, args, context):
+</pre></div>
+</div>
+<p>otherwise (if it is a global function), it should be:</p>
+<div class="highlight-python"><div class="highlight"><pre>def fnct(cr, uid, obj, name, args, context):
+</pre></div>
+</div>
+<p>The return value is a list containing 3-part tuples which are used in search function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">return</span> <span class="p">[(</span><span class="s">&#39;id&#39;</span><span class="p">,</span><span class="s">&#39;in&#39;</span><span class="p">,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">])]</span>
+</pre></div>
+</div>
+<p><em>obj</em> is the same as <em>self</em>, and <em>name</em> receives the field name. <em>args</em> is a list
+of 3-part tuples containing search criteria for this field, although the search
+function may be called separately for each tuple.</p>
+</div>
+<div class="section" id="example">
+<h4>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h4>
+<p>Suppose we create a contract object which is :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">hr_contract</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;hr.contract&#39;</span>
+    <span class="n">_description</span> <span class="o">=</span> <span class="s">&#39;Contract&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;name&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">char</span><span class="p">(</span><span class="s">&#39;Contract Name&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+        <span class="s">&#39;employee_id&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">many2one</span><span class="p">(</span><span class="s">&#39;hr.employee&#39;</span><span class="p">,</span> <span class="s">&#39;Employee&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+        <span class="s">&#39;function&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">many2one</span><span class="p">(</span><span class="s">&#39;res.partner.function&#39;</span><span class="p">,</span> <span class="s">&#39;Function&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+<span class="n">hr_contract</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If we want to add a field that retrieves the function of an employee by looking its current contract, we use a functional field. The object hr_employee is inherited this way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">hr_employee</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&quot;hr.employee&quot;</span>
+    <span class="n">_description</span> <span class="o">=</span> <span class="s">&quot;Employee&quot;</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&quot;hr.employee&quot;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;contract_ids&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">one2many</span><span class="p">(</span><span class="s">&#39;hr.contract&#39;</span><span class="p">,</span> <span class="s">&#39;employee_id&#39;</span><span class="p">,</span> <span class="s">&#39;Contracts&#39;</span><span class="p">),</span>
+        <span class="s">&#39;function&#39;</span> <span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">function</span><span class="p">(</span>
+            <span class="n">_get_cur_function_id</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s">&#39;many2one&#39;</span><span class="p">,</span>
+            <span class="n">obj</span><span class="o">=</span><span class="s">&quot;res.partner.function&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">string</span><span class="o">=</span><span class="s">&#39;Contract Function&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+<span class="n">hr_employee</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>three points</p>
+<ul class="last simple">
+<li><em class="guilabel">type</em> =&#8217;many2one&#8217; is because the function field must create
+a many2one field; function is declared as a many2one in hr_contract also.</li>
+<li><em class="guilabel">obj</em> =&#8221;res.partner.function&#8221; is used to specify that the
+object to use for the many2one field is res.partner.function.</li>
+<li>We called our method <em class="guilabel">_get_cur_function_id</em> because its role
+is to return a dictionary whose keys are ids of employees, and whose
+corresponding values are ids of the function of those employees. The
+code of this method is:</li>
+</ul>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">_get_cur_function_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+        <span class="c">#get the id of the current function of the employee of identifier &quot;i&quot;</span>
+        <span class="n">sql_req</span><span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">        SELECT f.id AS func_id</span>
+<span class="s">        FROM hr_contract c</span>
+<span class="s">          LEFT JOIN res_partner_function f ON (f.id = c.function)</span>
+<span class="s">        WHERE</span>
+<span class="s">          (c.employee_id = </span><span class="si">%d</span><span class="s">)</span>
+<span class="s">        &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,)</span>
+
+        <span class="n">cr</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql_req</span><span class="p">)</span>
+        <span class="n">sql_res</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">dictfetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">sql_res</span><span class="p">:</span> <span class="c">#The employee has one associated contract</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sql_res</span><span class="p">[</span><span class="s">&#39;func_id&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#res[i] must be set to False and not to None because of XML:RPC</span>
+            <span class="c"># &quot;cannot marshal None unless allow_none is enabled&quot;</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="n">res</span>
+</pre></div>
+</div>
+<p>The id of the function is retrieved using a SQL query. Note that if the query
+returns no result, the value of sql_res[&#8216;func_id&#8217;] will be None. We force the
+False value in this case value because XML:RPC (communication between the server
+and the client) doesn&#8217;t allow to transmit this value.</p>
+</div>
+<div class="section" id="store-parameter">
+<h4>store Parameter<a class="headerlink" href="#store-parameter" title="Permalink to this headline">¶</a></h4>
+<p>It will calculate the field and store the result in the table. The field will be
+recalculated when certain fields are changed on other objects. It uses the
+following syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">store</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;object_name&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">function_name</span><span class="p">,</span>
+            <span class="p">[</span><span class="s">&#39;field_name1&#39;</span><span class="p">,</span> <span class="s">&#39;field_name2&#39;</span><span class="p">],</span>
+            <span class="n">priority</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It will call function function_name when any changes are written to fields in the
+list [&#8216;field1&#8217;,&#8217;field2&#8217;] on object &#8216;object_name&#8217;. The function should have the
+following signature:</p>
+<div class="highlight-python"><div class="highlight"><pre>def function_name(self, cr, uid, ids, context=None):
+</pre></div>
+</div>
+<p>Where <cite>ids</cite> will be the ids of records in the other object&#8217;s table that have
+changed values in the watched fields. The function should return a list of ids
+of records in its own table that should have the field recalculated. That list
+will be sent as a parameter for the main function of the field.</p>
+<p>Here&#8217;s an example from the membership module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;membership_state&#39;</span><span class="p">:</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">function</span><span class="p">(</span>
+        <span class="n">_membership_state</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">string</span><span class="o">=</span><span class="s">&#39;Current membership state&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s">&#39;selection&#39;</span><span class="p">,</span>
+        <span class="n">selection</span><span class="o">=</span><span class="n">STATE</span><span class="p">,</span>
+        <span class="n">store</span><span class="o">=</span><span class="p">{</span>
+            <span class="s">&#39;account.invoice&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_get_invoice_partner</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;state&#39;</span><span class="p">],</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="s">&#39;membership.membership_line&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_get_partner_id</span><span class="p">,[</span><span class="s">&#39;state&#39;</span><span class="p">],</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="s">&#39;res.partner&#39;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="p">{}:</span> <span class="n">ids</span><span class="p">,</span>
+                <span class="p">[</span><span class="s">&#39;free_member&#39;</span><span class="p">],</span>
+                <span class="mi">10</span><span class="p">)</span>
+        <span class="p">}),</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="property-fields">
+<h3>Property Fields<a class="headerlink" href="#property-fields" title="Permalink to this headline">¶</a></h3>
+<dl class="describe">
+<dt>
+<code class="descname">Declaring a property</code></dt>
+<dd></dd></dl>
+
+<p>A property is a special field: fields.property.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">res_partner</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&quot;res.partner&quot;</span>
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&quot;res.partner&quot;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;property_product_pricelist&#39;</span><span class="p">:</span>
+                                            <span class="n">fields</span><span class="o">.</span><span class="n">property</span><span class="p">(</span>
+                                <span class="s">&#39;product.pricelist&#39;</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="s">&#39;many2one&#39;</span><span class="p">,</span>
+                        <span class="n">relation</span><span class="o">=</span><span class="s">&#39;product.pricelist&#39;</span><span class="p">,</span>
+                        <span class="n">string</span><span class="o">=</span><span class="s">&quot;Sale Pricelist&quot;</span><span class="p">,</span>
+                                <span class="n">method</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                <span class="n">view_load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                <span class="n">group_name</span><span class="o">=</span><span class="s">&quot;Pricelists Properties&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Then you have to create the default value in a .XML file for this property:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.property&quot;</span> <span class="na">id=</span><span class="s">&quot;property_product_pricelist&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>property_product_pricelist<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;fields_id&quot;</span> <span class="na">search=</span><span class="s">&quot;[(&#39;model&#39;,&#39;=&#39;,&#39;res.partner&#39;),</span>
+<span class="s">      (&#39;name&#39;,&#39;=&#39;,&#39;property_product_pricelist&#39;)]&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">eval=</span><span class="s">&quot;&#39;product.pricelist,&#39;+str(list0)&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>if the default value points to a resource from another module, you can use the ref function like this:</p>
+<p class="last">&lt;field name=&#8221;value&#8221; eval=&#8220;&#8216;product.pricelist,&#8217;+str(ref(&#8216;module.data_id&#8217;))&#8221;/&gt;</p>
+</div>
+<p><strong>Putting properties in forms</strong></p>
+<p>To add properties in forms, just put the &lt;properties/&gt; tag in your form. This will automatically add all properties fields that are related to this object. The system will add properties depending on your rights. (some people will be able to change a specific property, others won&#8217;t).</p>
+<p>Properties are displayed by section, depending on the group_name attribute. (It is rendered in the client like a separator tag).</p>
+<p><strong>How does this work ?</strong></p>
+<p>The fields.property class inherits from fields.function and overrides the read and write method. The type of this field is many2one, so in the form a property is represented like a many2one function.</p>
+<p>But the value of a property is stored in the ir.property class/table as a complete record. The stored value is a field of type reference (not many2one) because each property may point to a different object. If you edit properties values (from the administration menu), these are represented like a field of type reference.</p>
+<p>When you read a property, the program gives you the property attached to the instance of object you are reading. If this object has no value, the system will give you the default property.</p>
+<p>The definition of a property is stored in the ir.model.fields class like any other fields. In the definition of the property, you can add groups that are allowed to change to property.</p>
+<p><strong>Using properties or normal fields</strong></p>
+<p>When you want to add a new feature, you will have to choose to implement it as a property or as normal field. Use a normal field when you inherit from an object and want to extend this object. Use a property when the new feature is not related to the object but to an external concept.</p>
+<p>Here are a few tips to help you choose between a normal field or a property:</p>
+<p>Normal fields extend the object, adding more features or data.</p>
+<p>A property is a concept that is attached to an object and have special features:</p>
+<ul class="simple">
+<li>Different value for the same property depending on the company</li>
+<li>Rights management per field</li>
+<li>It&#8217;s a link between resources (many2one)</li>
+</ul>
+<p><strong>Example 1: Account Receivable</strong></p>
+<p>The default &#8220;Account Receivable&#8221; for a specific partner is implemented as a property because:</p>
+<blockquote>
+<div><ul class="simple">
+<li>This is a concept related to the account chart and not to the partner, so it is an account property that is visible on a partner form. Rights have to be managed on this fields for accountants, these are not the same rights that are applied to partner objects. So you have specific rights just for this field of the partner form: only accountants may change the account receivable of a partner.</li>
+<li>This is a multi-company field: the same partner may have different account receivable values depending on the company the user belongs to. In a multi-company system, there is one account chart per company. The account receivable of a partner depends on the company it placed the sale order.</li>
+<li>The default account receivable is the same for all partners and is configured from the general property menu (in administration).</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">One interesting thing is that properties avoid &#8220;spaghetti&#8221; code. The account module depends on the partner (base) module. But you can install the partner (base) module without the accounting module. If you add a field that points to an account in the partner object, both objects will depend on each other. It&#8217;s much more difficult to maintain and code (for instance, try to remove a table when both tables are pointing to each others.)</p>
+</div>
+<p><strong>Example 2: Product Times</strong></p>
+<p>The product expiry module implements all delays related to products: removal date, product usetime, ... This module is very useful for food industries.</p>
+<p>This module inherits from the product.product object and adds new fields to it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">product_product</span><span class="p">(</span><span class="n">osv</span><span class="o">.</span><span class="n">osv</span><span class="p">):</span>
+
+    <span class="n">_inherit</span> <span class="o">=</span> <span class="s">&#39;product.product&#39;</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;product.product&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+
+        <span class="s">&#39;life_time&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="s">&#39;Product lifetime&#39;</span><span class="p">),</span>
+        <span class="s">&#39;use_time&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="s">&#39;Product usetime&#39;</span><span class="p">),</span>
+        <span class="s">&#39;removal_time&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="s">&#39;Product removal time&#39;</span><span class="p">),</span>
+        <span class="s">&#39;alert_time&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="s">&#39;Product alert time&#39;</span><span class="p">),</span>
+        <span class="p">}</span>
+
+<span class="n">product_product</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This module adds simple fields to the product.product object. We did not use properties because:</p>
+<blockquote>
+<div><ul class="simple">
+<li>We extend a product, the life_time field is a concept related to a product, not to another object.</li>
+<li>We do not need a right management per field, the different delays are managed by the same people that manage all products.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="orm-methods">
+<h2>ORM methods<a class="headerlink" href="#orm-methods" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="keeping-the-context-in-orm-methods">
+<h3>Keeping the context in ORM methods<a class="headerlink" href="#keeping-the-context-in-orm-methods" title="Permalink to this headline">¶</a></h3>
+<p>In OpenObject, the context holds very important data such as the language in
+which a document must be written, whether function field needs updating or not,
+etc.</p>
+<p>When calling an ORM method, you will probably already have a context - for
+example the framework will provide you with one as a parameter of almost
+every method.
+If you do have a context, it is very important that you always pass it through
+to every single method you call.</p>
+<p>This rule also applies to writing ORM methods. You should expect to receive a
+context as parameter, and always pass it through to every other method you call..</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Objects, Fields and Methods</a><ul>
+<li><a class="reference internal" href="#openerp-objects">OpenERP Objects</a></li>
+<li><a class="reference internal" href="#the-orm-object-relational-mapping-models">The ORM - Object-relational mapping - Models</a></li>
+<li><a class="reference internal" href="#openerp-object-attributes">OpenERP Object Attributes</a><ul>
+<li><a class="reference internal" href="#objects-introduction">Objects Introduction</a></li>
+<li><a class="reference internal" href="#object-definition">Object definition</a></li>
+<li><a class="reference internal" href="#predefined-fields">Predefined fields</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#object-inheritance-inherit">Object Inheritance - _inherit</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#extension-of-an-object">Extension of an object</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inheritance-by-delegation-inherits">Inheritance by Delegation - _inherits</a></li>
+<li><a class="reference internal" href="#fields-introduction">Fields Introduction</a></li>
+<li><a class="reference internal" href="#type-of-fields">Type of Fields</a><ul>
+<li><a class="reference internal" href="#basic-types">Basic Types</a></li>
+<li><a class="reference internal" href="#relational-types">Relational Types</a></li>
+<li><a class="reference internal" href="#functional-fields">Functional Fields</a><ul>
+<li><a class="reference internal" href="#fnct-parameter">fnct parameter</a></li>
+<li><a class="reference internal" href="#fnct-inv-parameter">fnct_inv parameter</a></li>
+<li><a class="reference internal" href="#fnct-search-parameter">fnct_search parameter</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#store-parameter">store Parameter</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#property-fields">Property Fields</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#orm-methods">ORM methods</a><ul>
+<li><a class="reference internal" href="#keeping-the-context-in-orm-methods">Keeping the context in ORM methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="03_module_dev.html">Modules</a><ul>
+      <li>Previous: <a href="03_module_dev_01.html" title="previous chapter">Module structure</a></li>
+      <li>Next: <a href="03_module_dev_03.html" title="next chapter">Views and Events</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/03_module_dev_02.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

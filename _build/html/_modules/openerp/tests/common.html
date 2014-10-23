@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>openerp.tests.common &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="../../../_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for openerp.tests.common</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module :mod:`openerp.tests.common` provides a few helpers and classes to write</span>
+<span class="sd">tests.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">unittest2</span>
+<span class="kn">import</span> <span class="nn">xmlrpclib</span>
+
+<span class="kn">import</span> <span class="nn">openerp</span>
+
+<span class="c"># The openerp library is supposed already configured.</span>
+<span class="n">ADDONS_PATH</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;addons_path&#39;</span><span class="p">]</span>
+<span class="n">PORT</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;xmlrpc_port&#39;</span><span class="p">]</span>
+<span class="n">DB</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;db_name&#39;</span><span class="p">]</span>
+
+<span class="c"># If the database name is not provided on the command-line,</span>
+<span class="c"># use the one on the thread (which means if it is provided on</span>
+<span class="c"># the command-line, this will break when installing another</span>
+<span class="c"># database from XML-RPC).</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">DB</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">(),</span> <span class="s">&#39;dbname&#39;</span><span class="p">):</span>
+    <span class="n">DB</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">dbname</span>
+
+<span class="n">HOST</span> <span class="o">=</span> <span class="s">&#39;127.0.0.1&#39;</span>
+
+<span class="n">ADMIN_USER</span> <span class="o">=</span> <span class="s">&#39;admin&#39;</span>
+<span class="n">ADMIN_USER_ID</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">SUPERUSER_ID</span>
+<span class="n">ADMIN_PASSWORD</span> <span class="o">=</span> <span class="s">&#39;admin&#39;</span>
+
+<div class="viewcode-block" id="start_openerp"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.start_openerp">[docs]</a><span class="k">def</span> <span class="nf">start_openerp</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start the OpenERP server similary to the openerp-server script.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">openerp</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">start_services</span><span class="p">()</span>
+
+    <span class="c"># Ugly way to ensure the server is listening.</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stop_openerp"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.stop_openerp">[docs]</a><span class="k">def</span> <span class="nf">stop_openerp</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Shutdown the OpenERP server similarly to a single ctrl-c.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">openerp</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">stop_services</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="BaseCase"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.BaseCase">[docs]</a><span class="k">class</span> <span class="nc">BaseCase</span><span class="p">(</span><span class="n">unittest2</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subclass of TestCase for common OpenERP-specific code.</span>
+<span class="sd">    </span>
+<span class="sd">    This class is abstract and expects self.cr and self.uid to be initialized by subclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">openerp</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">RegistryManager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">DB</span><span class="p">)</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">registry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">openerp</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">RegistryManager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">DB</span><span class="p">)[</span><span class="n">model</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseCase.ref"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.BaseCase.ref">[docs]</a>    <span class="k">def</span> <span class="nf">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns database ID corresponding to a given identifier.</span>
+
+<span class="sd">            :param xid: fully-qualified record identifier, in the form ``module.identifier``</span>
+<span class="sd">            :raise: ValueError if not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">xid</span><span class="p">,</span> <span class="s">&quot;this method requires a fully qualified parameter, in the following form: &#39;module.identifier&#39;&quot;</span>
+        <span class="n">module</span><span class="p">,</span> <span class="n">xid</span> <span class="o">=</span> <span class="n">xid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s">&#39;ir.model.data&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_object_reference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">xid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">id</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseCase.browse_ref"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.BaseCase.browse_ref">[docs]</a>    <span class="k">def</span> <span class="nf">browse_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a browsable record for the given identifier.</span>
+
+<span class="sd">            :param xid: fully-qualified record identifier, in the form ``module.identifier``</span>
+<span class="sd">            :raise: ValueError if not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">xid</span><span class="p">,</span> <span class="s">&quot;this method requires a fully qualified parameter, in the following form: &#39;module.identifier&#39;&quot;</span>
+        <span class="n">module</span><span class="p">,</span> <span class="n">xid</span> <span class="o">=</span> <span class="n">xid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s">&#39;ir.model.data&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">xid</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TransactionCase"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.TransactionCase">[docs]</a><span class="k">class</span> <span class="nc">TransactionCase</span><span class="p">(</span><span class="n">BaseCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subclass of BaseCase with a single transaction, rolled-back at the end of</span>
+<span class="sd">    each test (method).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Store cr and uid in class variables, to allow ref() and browse_ref to be BaseCase @classmethods</span>
+        <span class="c"># and still access them</span>
+        <span class="n">TransactionCase</span><span class="o">.</span><span class="n">cr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">TransactionCase</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">SUPERUSER_ID</span>
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="SingleTransactionCase"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.SingleTransactionCase">[docs]</a><span class="k">class</span> <span class="nc">SingleTransactionCase</span><span class="p">(</span><span class="n">BaseCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subclass of BaseCase with a single transaction for the whole class,</span>
+<span class="sd">    rolled-back after all the tests.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">cr</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">openerp</span><span class="o">.</span><span class="n">SUPERUSER_ID</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">tearDownClass</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="RpcCase"><a class="viewcode-back" href="../../../05_test_framework.html#openerp.tests.common.RpcCase">[docs]</a><span class="k">class</span> <span class="nc">RpcCase</span><span class="p">(</span><span class="n">unittest2</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subclass of TestCase with a few XML-RPC proxies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">methodName</span><span class="o">=</span><span class="s">&#39;runTest&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RpcCase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">methodName</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+
+        <span class="c"># Use the old (pre 6.1) API.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">url_60</span> <span class="o">=</span> <span class="n">url_60</span> <span class="o">=</span> <span class="s">&#39;http://</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">/xmlrpc/&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">HOST</span><span class="p">,</span> <span class="n">PORT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">common_60</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_60</span> <span class="o">+</span> <span class="s">&#39;common&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">db_60</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_60</span> <span class="o">+</span> <span class="s">&#39;db&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">object_60</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_60</span> <span class="o">+</span> <span class="s">&#39;object&#39;</span><span class="p">)</span>
+
+        <span class="c"># Use the new (6.1) API.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">url_61</span> <span class="o">=</span> <span class="n">url_61</span> <span class="o">=</span> <span class="s">&#39;http://</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">/openerp/xmlrpc/1/&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">HOST</span><span class="p">,</span> <span class="n">PORT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">common_61</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_61</span> <span class="o">+</span> <span class="s">&#39;common&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">db_61</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_61</span> <span class="o">+</span> <span class="s">&#39;db&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">model_61</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">url_61</span> <span class="o">+</span> <span class="s">&#39;model/&#39;</span> <span class="o">+</span> <span class="n">DB</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generate_database_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="s">&#39;_database_id&#39;</span><span class="p">):</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_database_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_database_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="s">&#39;_fresh_name_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_database_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span>
+
+<span class="c"># vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="../../../index.html">
+  <img class="logo" src="../../../_static/openerp.png" alt="Logo"/>
+</a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

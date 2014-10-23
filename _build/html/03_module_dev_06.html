@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Module versioning &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Modules" href="03_module_dev.html" />
+    <link rel="next" title="Security in OpenERP: users, groups" href="04_security.html" />
+    <link rel="prev" title="Example of module creation" href="03_module_dev_05.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="04_security.html" title="Security in OpenERP: users, groups"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_05.html" title="Example of module creation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="03_module_dev.html" accesskey="U">Modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-versioning">
+<span id="module-dev-versioning"></span><span id="id1"></span><h1>Module versioning<a class="headerlink" href="#module-versioning" title="Permalink to this headline">¶</a></h1>
+<p>OpenERP has been developed with modularity in mind: OpenERP should be flexible
+enough so it can be adopted by any enterprise, of any size and in any market.
+By using modules one can adapt OpenERP in many different ways: from completely
+different business to smaller, company-specific changes.</p>
+<p>As modules (and the core framework itself) evolve, it is necessary to identify
+modules by their version so a sensible set of modules can be chosen for a
+particular deployment.</p>
+<p>There are two trends re-inforcing each others. Firstly OpenERP s.a. will work
+on a smaller number of official modules and let the community handles more and
+more development. Secondly all those modules will receive greater exposure on
+<a class="reference external" href="http://apps.openerp.com/">OpenERP Apps</a> where each module will be owned by a single author.</p>
+<p>The solution advocated by OpenERP is straightforward and aims to avoid the
+<a class="reference external" href="http://en.wikipedia.org/wiki/Dependency_hell">dependency hell</a>. In particular we don&#8217;t want to deal with versioned
+dependencies (i.e. a module depends on a specific version of another module).</p>
+<p>For each stable release (e.g. OpenERP 6.1, or OpenERP 7.0) or, said in other
+words, for each major version, there is only one (major) version of each
+module. The minor version is bumped for bug fixes but is otherwise not
+important here.</p>
+<p>Making variations on some business needs must be done by creating new modules,
+possibly depending on previously written modules. If depending on a module
+proves too difficult, you can write a new module (not a new _version_). But
+generally Python is flexible enough that depending on the existing module
+should work.</p>
+<p>For the next major version, refactoring modules can be done and similar
+functionalities can be brought together in a better module.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Whenever a new module is developed or must evolve, the above versioning policy
+should be respected.</p>
+<p>A particular concern one can face when deploying OpenERP to multiple customers
+is now detailed as an example to provide a few guidelines. The hypotethical
+situation is as follow. A partner needs to create a new module, called <code class="docutils literal"><span class="pre">M</span></code>, for a
+customer. Shortly after (but still within a typical OpenERP release cycle, so
+there is no chance to bump the version number except for bug fixes), <code class="docutils literal"><span class="pre">M</span></code> must be
+adapted for another customer.</p>
+<p>The correct way to handle it is to leave <code class="docutils literal"><span class="pre">M</span></code> as it is and create a new module,
+say called <code class="docutils literal"><span class="pre">X</span></code>, that depends on <code class="docutils literal"><span class="pre">M</span></code> for the second customer. Both modules have the
+same version (i.e. 6.1 or 7.0, targeting the corresponding OpenERP version).</p>
+<p>If leaving <code class="docutils literal"><span class="pre">M</span></code> as it is is not possible (which should be very rare as Python
+is incredibly flexible), the <code class="docutils literal"><span class="pre">X</span></code> module for the new customer can depend on a
+new module <code class="docutils literal"><span class="pre">N</span></code>, derived from <code class="docutils literal"><span class="pre">M</span></code>. At this point, <code class="docutils literal"><span class="pre">N</span></code> is a new,
+differently named module. It is not a <code class="docutils literal"><span class="pre">M</span></code> module with a increased version
+number. Your goal should be to make <code class="docutils literal"><span class="pre">N</span></code> as close as possible to <code class="docutils literal"><span class="pre">M</span></code>, so
+that at the next version of OpenERP, the first customer can switch to <code class="docutils literal"><span class="pre">N</span></code>
+instead of <code class="docutils literal"><span class="pre">M</span></code> (or include the changes in a new version of <code class="docutils literal"><span class="pre">M</span></code>). At that
+point you are in the ideal situation: you have a module <code class="docutils literal"><span class="pre">N</span></code> for one customer,
+and a module <code class="docutils literal"><span class="pre">X</span></code> depending on N to account for the differences between those
+two customers.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module versioning</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="03_module_dev.html">Modules</a><ul>
+      <li>Previous: <a href="03_module_dev_05.html" title="previous chapter">Example of module creation</a></li>
+      <li>Next: <a href="04_security.html" title="next chapter">Security in OpenERP: users, groups</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/03_module_dev_06.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

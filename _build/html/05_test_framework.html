@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Test framework &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="next" title="Miscellanous" href="06_misc.html" />
+    <link rel="prev" title="Security in OpenERP: users, groups" href="04_security.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="06_misc.html" title="Miscellanous"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="04_security.html" title="Security in OpenERP: users, groups"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="test-framework">
+<span id="id1"></span><h1>Test framework<a class="headerlink" href="#test-framework" title="Permalink to this headline">¶</a></h1>
+<p>In addition to the YAML-based tests, OpenERP uses the <a class="reference external" href="http://pypi.python.org/pypi/unittest2">unittest2</a> testing
+framework to test both the core <code class="docutils literal"><span class="pre">openerp</span></code> package and its addons. For the
+core and each addons, tests are divided between three (overlapping) sets:</p>
+<ol class="arabic simple">
+<li>A test suite that comprises all the tests that can be run right after the
+addons is installed (or, for the core, right after a database is created).
+That suite is called <code class="docutils literal"><span class="pre">fast_suite</span></code> and must contain only tests that can be run
+frequently. Actually most of the tests should be considered fast enough to be
+included in that <code class="docutils literal"><span class="pre">fast_suite</span></code> list and only tests that take a long time to run
+(e.g. more than a minute) should not be listed. Those long tests should come up
+pretty rarely.</li>
+<li>A test suite called <code class="docutils literal"><span class="pre">checks</span></code> provides sanity checks. These tests are
+invariants that must be full-filled at any time. They are expected to always
+pass: obviously they must pass right after the module is installed (i.e. just
+like the <code class="docutils literal"><span class="pre">fast_suite</span></code> tests), but they must also pass after any other module is
+installed, after a migration, or even after the database was put in production
+for a few months.</li>
+<li>The third suite is made of all the tests: those provided by the two above
+suites, but also tests that are not explicitely listed in <code class="docutils literal"><span class="pre">fast_suite</span></code> or
+<code class="docutils literal"><span class="pre">checks</span></code>. They are not explicitely listed anywhere and are discovered
+automatically.</li>
+</ol>
+<p>As the sanity checks provide stronger guarantees about the code and database
+structure, new tests must be added to the <code class="docutils literal"><span class="pre">checks</span></code> suite whenever it is
+possible. Said with other words: one should try to avoid writing tests that
+assume a freshly installed/unaltered module or database.</p>
+<p>It is possible to have tests that are not listed in <code class="docutils literal"><span class="pre">fast_suite</span></code> or
+<code class="docutils literal"><span class="pre">checks</span></code>.  This is useful if a test takes a lot of time. By default, when
+using the testing infrastructure, tests should run fast enough so that people
+can use them frequently. One can also use that possiblity for tests that
+require some complex setup before they can be successfuly run.</p>
+<p>As a rule of thumb when writing a new test, try to add it to the <code class="docutils literal"><span class="pre">checks</span></code>
+suite. If it really needs that the module it belongs to is freshly installed,
+add it to <code class="docutils literal"><span class="pre">fast_suite</span></code>. Finally, if it can not be run in an acceptable time
+frame, don&#8217;t add it to any explicit list.</p>
+<div class="section" id="writing-tests">
+<h2>Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline">¶</a></h2>
+<p>The tests must be developed under <code class="docutils literal"><span class="pre">&lt;addons-name&gt;.tests</span></code> (or <code class="docutils literal"><span class="pre">openerp.tests</span></code>
+for the core).  For instance, with respect to the tests, a module <code class="docutils literal"><span class="pre">foo</span></code>
+should be organized as follow:</p>
+<div class="highlight-python"><div class="highlight"><pre>foo/
+  __init__.py # does not import .tests
+  tests/
+    __init__.py # import some of the tests sub-modules, and
+                # list them in fast_suite or checks
+    test_bar.py # contains unittest2 classes
+    test_baz.py # idem
+    ... and so on ...
+</pre></div>
+</div>
+<p>The two explicit lists of tests are thus the variables <code class="docutils literal"><span class="pre">foo.tests.fast_suite</span></code>
+and <code class="docutils literal"><span class="pre">foo.tests.checks</span></code>. As an example, you can take a look at the
+<code class="docutils literal"><span class="pre">openerp.tests</span></code> module (which follows exactly the same conventions even if it
+is not an addons).</p>
+<p>Note that the <code class="docutils literal"><span class="pre">fast_suite</span></code> and <code class="docutils literal"><span class="pre">checks</span></code> variables are really lists of
+module objects. They could be directly unittest2 suite objects if necessary in
+the future.</p>
+</div>
+<div class="section" id="running-the-tests">
+<h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>To run the tests (see <a class="reference internal" href="#test-framework"><em>above</em></a> to learn how tests are
+organized), the simplest way is to use the <code class="docutils literal"><span class="pre">oe</span></code> command (provided by the
+<code class="docutils literal"><span class="pre">openerp-command</span></code> project).</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; oe run-tests # will run all the fast_suite tests
+&gt; oe run-tests -m openerp # will run all the fast_suite tests defined in `openerp.tests`
+&gt; oe run-tests -m sale # will run all the fast_suite tests defined in `openerp.addons.sale.tests`
+&gt; oe run-tests -m foo.test_bar # will run the tests defined in `openerp.addons.foo.tests.test_bar`
+</pre></div>
+</div>
+<p>In addition to the above possibilities, when invoked with a non-existing module
+(or module.sub-module) name, oe will reply with a list of available test
+sub-modules.</p>
+<p>Depending on the <a class="reference external" href="http://pypi.python.org/pypi/unittest2">unittest2</a> class that is used to write the tests (see
+<a class="reference internal" href="#module-openerp.tests.common" title="openerp.tests.common"><code class="xref py py-mod docutils literal"><span class="pre">openerp.tests.common</span></code></a> for some helper classes that you can re-use), a
+database may be created before the test is run, and the module providing the
+test will be installed on that database.</p>
+<p>Because creating a database, installing modules, and then dropping it is
+expensive, it is possible to interleave the run of the <code class="docutils literal"><span class="pre">fast_suite</span></code> tests
+with the initialization of a new database: the dabase is created, and after
+each requested module is installed, its fast_suite tests are run. The database
+is thus created and dropped (and the modules installed) only once.</p>
+</div>
+<div class="section" id="module-openerp.tests.common">
+<span id="testcase-subclasses"></span><h2>TestCase subclasses<a class="headerlink" href="#module-openerp.tests.common" title="Permalink to this headline">¶</a></h2>
+<p>The module <a class="reference internal" href="#module-openerp.tests.common" title="openerp.tests.common"><code class="xref py py-mod docutils literal"><span class="pre">openerp.tests.common</span></code></a> provides a few helpers and classes to write
+tests.</p>
+<dl class="class">
+<dt id="openerp.tests.common.BaseCase">
+<em class="property">class </em><code class="descclassname">openerp.tests.common.</code><code class="descname">BaseCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#BaseCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.BaseCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of TestCase for common OpenERP-specific code.</p>
+<p>This class is abstract and expects self.cr and self.uid to be initialized by subclasses.</p>
+<dl class="classmethod">
+<dt id="openerp.tests.common.BaseCase.browse_ref">
+<em class="property">classmethod </em><code class="descname">browse_ref</code><span class="sig-paren">(</span><em>xid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#BaseCase.browse_ref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.BaseCase.browse_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a browsable record for the given identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>xid</strong> &#8211; fully-qualified record identifier, in the form <code class="docutils literal"><span class="pre">module.identifier</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raise:</th><td class="field-body">ValueError if not found</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="openerp.tests.common.BaseCase.ref">
+<em class="property">classmethod </em><code class="descname">ref</code><span class="sig-paren">(</span><em>xid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#BaseCase.ref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.BaseCase.ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns database ID corresponding to a given identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>xid</strong> &#8211; fully-qualified record identifier, in the form <code class="docutils literal"><span class="pre">module.identifier</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raise:</th><td class="field-body">ValueError if not found</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.tests.common.RpcCase">
+<em class="property">class </em><code class="descclassname">openerp.tests.common.</code><code class="descname">RpcCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#RpcCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.RpcCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of TestCase with a few XML-RPC proxies.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.tests.common.SingleTransactionCase">
+<em class="property">class </em><code class="descclassname">openerp.tests.common.</code><code class="descname">SingleTransactionCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#SingleTransactionCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.SingleTransactionCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of BaseCase with a single transaction for the whole class,
+rolled-back after all the tests.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.tests.common.TransactionCase">
+<em class="property">class </em><code class="descclassname">openerp.tests.common.</code><code class="descname">TransactionCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#TransactionCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.TransactionCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of BaseCase with a single transaction, rolled-back at the end of
+each test (method).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.tests.common.start_openerp">
+<code class="descclassname">openerp.tests.common.</code><code class="descname">start_openerp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#start_openerp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.start_openerp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the OpenERP server similary to the openerp-server script.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.tests.common.stop_openerp">
+<code class="descclassname">openerp.tests.common.</code><code class="descname">stop_openerp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/tests/common.html#stop_openerp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.tests.common.stop_openerp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown the OpenERP server similarly to a single ctrl-c.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The <cite>setUp</cite> and <cite>tearDown</cite> methods are not part of the tests. Uncaught
+exceptions in those methods are errors, not test failures. In particular,
+a failing <cite>setUp</cite> will not be followed by a <cite>tearDown</cite> causing any
+allocated resource in the <cite>setUp</cite> to not be released by the <cite>tearDown</cite>.</p>
+<p class="last">In the <a class="reference internal" href="#openerp.tests.common.TransactionCase" title="openerp.tests.common.TransactionCase"><code class="xref py py-class docutils literal"><span class="pre">openerp.tests.common.TransactionCase</span></code></a> and
+<a class="reference internal" href="#openerp.tests.common.SingleTransactionCase" title="openerp.tests.common.SingleTransactionCase"><code class="xref py py-class docutils literal"><span class="pre">openerp.tests.common.SingleTransactionCase</span></code></a>, this means the
+test suite can hang because of unclosed cursors.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Test framework</a><ul>
+<li><a class="reference internal" href="#writing-tests">Writing tests</a></li>
+<li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
+<li><a class="reference internal" href="#module-openerp.tests.common">TestCase subclasses</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="04_security.html" title="previous chapter">Security in OpenERP: users, groups</a></li>
+      <li>Next: <a href="06_misc.html" title="next chapter">Miscellanous</a></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/05_test_framework.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

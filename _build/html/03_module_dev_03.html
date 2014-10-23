@@ -1,0 +1,1689 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Views and Events &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Modules" href="03_module_dev.html" />
+    <link rel="next" title="Menus and Actions" href="03_module_dev_04.html" />
+    <link rel="prev" title="Objects, Fields and Methods" href="03_module_dev_02.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_04.html" title="Menus and Actions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_module_dev_02.html" title="Objects, Fields and Methods"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="03_module_dev.html" accesskey="U">Modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="views-and-events">
+<span id="module-dev-views"></span><h1>Views and Events<a class="headerlink" href="#views-and-events" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction-to-views">
+<h2>Introduction to Views<a class="headerlink" href="#introduction-to-views" title="Permalink to this headline">¶</a></h2>
+<p>As all data of the program is stored in objects, as explained in the Objects
+section, how are these objects exposed to the user ? We will try to answer this
+question in this section.</p>
+<p>First of all, let&#8217;s note that every resource type uses its own interface. For
+example, the screen to modify a partner&#8217;s data is not the same as the one to
+modify an invoice.</p>
+<p>Then, you have to know that the OpenERP user interface is dynamic, it means
+that it is not described &#8220;statically&#8221; by some code, but dynamically built from
+XML descriptions of the client screens.</p>
+<p>From now on, we will call these screen descriptions views.</p>
+<p>A notable characteristic of these views is that they can be edited at any
+moment (even during the program execution). After a modification to a displayed
+view has occurred, you simply need to close the tab corresponding to that
+&#8216;view&#8217; and re-open it for the changes to appear.</p>
+<div class="section" id="views-principles">
+<h3>Views principles<a class="headerlink" href="#views-principles" title="Permalink to this headline">¶</a></h3>
+<p>Views describe how each object (type of resource) is displayed. More precisely, for each object, we can define one (or several) view(s) to describe which fields should be drawn and how.</p>
+<p>There are two types of views:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>form views</li>
+<li>tree views</li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Since OpenERP 4.1, form views can also contain graphs.</p>
+</div>
+</div>
+</div>
+<div class="section" id="form-views">
+<h2>Form views<a class="headerlink" href="#form-views" title="Permalink to this headline">¶</a></h2>
+<p>The field disposition in a form view always follows the same principle. Fields are distributed on the screen following the rules below:</p>
+<blockquote>
+<div><ul class="simple">
+<li>By default, each field is preceded by a label, with its name.</li>
+<li>Fields are placed on the screen from left to right, and from top to bottom, according to the order in which they are declared in the view.</li>
+<li>Every screen is divided into 4 columns, each column being able to contain either a label, or an &#8220;edition&#8221; field. As every edition field is preceded (by default) by a label with its name, there will be two fields (and their respective labels) on each line of the screen. The green and red zones on the screen-shot below, illustrate those 4 columns. They designate respectively the labels and their corresponding fields.</li>
+</ul>
+</div></blockquote>
+<p>Views also support more advanced placement options:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A view field can use several columns. For example, on the screen-shot below, the zone in the blue frame is, in fact, the only field of a &#8220;one to many&#8221;. We will come back later on this note, but let&#8217;s note that it uses the whole width of the screen and not only one column.</li>
+<li>We can also make the opposite operation: take a columns group and divide it in as many columns as desired. The surrounded green zones of the screen above are good examples. Precisely, the green framework up and on the right side takes the place of two columns, but contains 4 columns.</li>
+</ul>
+</div></blockquote>
+<p>As we can see below in the purple zone of the screen, there is also a way to distribute the fields of an object on different tabs.</p>
+<div class="section" id="on-change">
+<h3>On Change<a class="headerlink" href="#on-change" title="Permalink to this headline">¶</a></h3>
+<p>The on_change attribute defines a method that is called when the content of a view field has changed.</p>
+<p>This method takes at least arguments: cr, uid, ids, which are the three classical arguments and also the context dictionary. You can add parameters to the method. They must correspond to other fields defined in the view, and must also be defined in the XML with fields defined this way:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;field name=&quot;name_of_field&quot; on_change=&quot;name_of_method(other_field&#39;_1_&#39;, ..., other_field&#39;_n_&#39;)&quot;/&gt;
+</pre></div>
+</div>
+<p>The example below is from the sale order view.</p>
+<p>You can use the &#8216;context&#8217; keyword to access data in the context that can be used as params of the function.:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;field name=&quot;shop_id&quot; on_change=&quot;onchange_shop_id(shop_id)&quot;/&gt;
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">onchange_shop_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">shop_id</span><span class="p">):</span>
+
+    <span class="n">v</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">if</span> <span class="n">shop_id</span><span class="p">:</span>
+
+        <span class="n">shop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sale.shop&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">browse</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span><span class="n">uid</span><span class="p">,</span><span class="n">shop_id</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">[</span><span class="s">&#39;project_id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">shop</span><span class="o">.</span><span class="n">project_id</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">shop</span><span class="o">.</span><span class="n">pricelist_id</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+
+            <span class="n">v</span><span class="p">[</span><span class="s">&#39;pricelist_id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">shop</span><span class="o">.</span><span class="n">pricelist_id</span><span class="o">.</span><span class="n">id</span>
+
+        <span class="n">v</span><span class="p">[</span><span class="s">&#39;payment_default_id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">shop</span><span class="o">.</span><span class="n">payment_default_id</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span><span class="n">v</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>When editing the shop_id form field, the onchange_shop_id method of the sale_order object is called and returns a dictionary where the &#8216;value&#8217; key contains a dictionary of the new value to use in the &#8216;project_id&#8217;, &#8216;pricelist_id&#8217; and &#8216;payment_default_id&#8217; fields.</p>
+<p>Note that it is possible to change more than just the values of
+fields. For example, it is possible to change the value of some fields
+and the domain of other fields by returning a value of the form:
+return {&#8216;domain&#8217;: d, &#8216;value&#8217;: value}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">returns:</th><td class="field-body"><p class="first">a dictionary with any mix of the following keys:</p>
+<dl class="last docutils">
+<dt><code class="docutils literal"><span class="pre">domain</span></code></dt>
+<dd><p class="first">A mapping of <code class="docutils literal"><span class="pre">{field:</span> <span class="pre">domain}</span></code>.</p>
+<p class="last">The returned domains should be set on the fields instead of the
+default ones.</p>
+</dd>
+<dt><code class="docutils literal"><span class="pre">value</span></code></dt>
+<dd><p class="first last">A mapping of <code class="docutils literal"><span class="pre">{field:</span> <span class="pre">value}}</span></code>, the values will be set on the
+corresponding fields and may trigger new onchanges or attrs
+changes</p>
+</dd>
+<dt><code class="docutils literal"><span class="pre">warning</span></code> A dict with the keys <code class="docutils literal"><span class="pre">title</span></code> and <code class="docutils literal"><span class="pre">message</span></code>. Both</dt>
+<dd><p class="first last">are mandatory. Indicate that an error message should be
+displayed to the user.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="tree-views">
+<h2>Tree views<a class="headerlink" href="#tree-views" title="Permalink to this headline">¶</a></h2>
+<p>These views are used when we work in list mode (in order to visualize several resources at once) and in the search screen. These views are simpler than the form views and thus have less options.</p>
+</div>
+<div class="section" id="search-views">
+<h2>Search views<a class="headerlink" href="#search-views" title="Permalink to this headline">¶</a></h2>
+<p>Search views are a new feature of OpenERP supported as of version 6.0
+It creates a customized search panel, and is declared quite similarly to a form view,
+except that the view type and root element change to <code class="docutils literal"><span class="pre">search</span></code> instead of <code class="docutils literal"><span class="pre">form</span></code>.</p>
+<p>Following is the list of new elements and features supported in search views.</p>
+<div class="section" id="group-tag">
+<h3>Group tag<a class="headerlink" href="#group-tag" title="Permalink to this headline">¶</a></h3>
+<p>Unlike form group elements, search view groups support unlimited number of widget(fields or filters)
+in a row (no automatic line wrapping), and only use the following attributes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">expand</span></code>: turns on the expander icon on the group (1 for expanded by default, 0 for collapsed)</li>
+<li><code class="docutils literal"><span class="pre">string</span></code>: label for the group</li>
+</ul>
+</div></blockquote>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;group</span> <span class="na">expand=</span><span class="s">&quot;1&quot;</span> <span class="na">string=</span><span class="s">&quot;Group By...&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;filter</span> <span class="na">string=</span><span class="s">&quot;Users&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span> <span class="na">domain=</span><span class="s">&quot;[]&quot;</span> <span class="na">context=</span><span class="s">&quot;{&#39;group_by&#39;:&#39;user_id&#39;}&quot;</span><span class="nt">/&gt;</span>
+   <span class="nt">&lt;filter</span> <span class="na">string=</span><span class="s">&quot;Project&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span> <span class="na">domain=</span><span class="s">&quot;[]&quot;</span> <span class="na">context=</span><span class="s">&quot;{&#39;group_by&#39;:&#39;project_id&#39;}&quot;</span><span class="nt">/&gt;</span>
+   <span class="nt">&lt;separator</span> <span class="na">orientation=</span><span class="s">&quot;vertical&quot;</span><span class="nt">/&gt;</span>
+   <span class="nt">&lt;filter</span> <span class="na">string=</span><span class="s">&quot;Deadline&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span> <span class="na">domain=</span><span class="s">&quot;[]&quot;</span> <span class="na">context=</span><span class="s">&quot;{&#39;group_by&#39;:&#39;date_deadline&#39;}&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/group&gt;</span>
+</pre></div>
+</div>
+<p>In the screenshot above the green area is an expandable group.</p>
+</div>
+<div class="section" id="filter-tag">
+<h3>Filter tag<a class="headerlink" href="#filter-tag" title="Permalink to this headline">¶</a></h3>
+<p>Filters are displayed as a toggle button on search panel
+Filter elements can add new values in the current domain or context of the search view.
+Filters can be added as a child element of field too, to indicate that they apply specifically
+to that field (in this case the button&#8217;s icon will smaller)</p>
+<p>In the picture above the red area contains filters at the top of the form while
+the blue area highlights a field and it&#8217;s child filter.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;filter</span> <span class="na">string=</span><span class="s">&quot;Current&quot;</span> <span class="na">domain=</span><span class="s">&quot;[(&#39;state&#39;,&#39;in&#39;,(&#39;open&#39;,&#39;draft&#39;))]&quot;</span> <span class="na">help=</span><span class="s">&quot;Draft, Open and Pending Tasks&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;project_id&quot;</span> <span class="na">select=</span><span class="s">&quot;1&quot;</span> <span class="na">widget=</span><span class="s">&quot;selection&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;filter</span> <span class="na">domain=</span><span class="s">&quot;[(&#39;project_id.user_id&#39;,&#39;=&#39;,uid)]&quot;</span> <span class="na">help=</span><span class="s">&quot;My Projects&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="group-by">
+<h3>Group By<a class="headerlink" href="#group-by" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;filter</span> <span class="na">string=</span><span class="s">&quot;Project&quot;</span> <span class="na">icon=</span><span class="s">&quot;terp-project&quot;</span> <span class="na">domain=</span><span class="s">&quot;[]&quot;</span> <span class="na">context=</span><span class="s">&quot;{&#39;group_by&#39;:&#39;project_id&#39;}&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>Above filters groups records sharing the same <code class="docutils literal"><span class="pre">project_id</span></code> value. Groups are loaded
+lazily, so the inner records are only loaded when the group is expanded.
+The group header lines contain the common values for all records in that group, and all numeric
+fields currently displayed in the view are replaced by the sum of the values in that group.</p>
+<p>It is also possible to group on multiple values by specifying a list of fields instead of a single string.
+In this case nested groups will be displayed:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;filter string=&quot;Project&quot; icon=&quot;terp-project&quot; domain=&quot;[]&quot; context=&quot;{&#39;group_by&#39;: [&#39;project_id&#39;, &#39;user_id&#39;] }&quot;/&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="fields">
+<h3>Fields<a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
+<p>Field elements in search views are used to get user-provided values
+for searches. As a result, as for group elements, they are quite
+different than form view&#8217;s fields:</p>
+<ul>
+<li><p class="first">a search field can contain filters, which generally indicate that
+both field and filter manage the same field and are related.</p>
+<p>Those inner filters are rendered as smaller buttons, right next to
+the field, and <em>must not</em> have a <code class="docutils literal"><span class="pre">string</span></code> attribute.</p>
+</li>
+<li><p class="first">a search field really builds a domain composed of <code class="docutils literal"><span class="pre">[(field_name,</span>
+<span class="pre">operator,</span> <span class="pre">field_value)]</span></code>. This domain can be overridden in two
+ways:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">&#64;operator</span></code> replaces the default operator for the field (which
+depends on its type)</li>
+<li><code class="docutils literal"><span class="pre">&#64;filter_domain</span></code> lets you provide a fully custom domain, which
+will replace the default domain creation</li>
+</ul>
+</li>
+<li><p class="first">a search field does not create a context by default, but you can
+provide an <code class="docutils literal"><span class="pre">&#64;context</span></code> which will be evaluated and merged into the
+wider context (as with a <code class="docutils literal"><span class="pre">filter</span></code> element).</p>
+</li>
+</ul>
+<p>To get the value of the field in your <code class="docutils literal"><span class="pre">&#64;context</span></code> or
+<code class="docutils literal"><span class="pre">&#64;filter_domain</span></code>, you can use the variable <code class="docutils literal"><span class="pre">self</span></code>:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;location_id&quot;</span> <span class="na">string=</span><span class="s">&quot;Location&quot;</span>
+       <span class="na">filter_domain=</span><span class="s">&quot;[&#39;|&#39;,(&#39;location_id&#39;,&#39;ilike&#39;,self),(&#39;location_dest_id&#39;,&#39;ilike&#39;,self)]&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;journal_id&quot;</span> <span class="na">widget=</span><span class="s">&quot;selection&quot;</span>
+       <span class="na">context=</span><span class="s">&quot;{&#39;journal_id&#39;:self, &#39;visible_id&#39;:self, &#39;normal_view&#39;:False}&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<div class="section" id="range-fields-date-datetime-time">
+<h4>Range fields (date, datetime, time)<a class="headerlink" href="#range-fields-date-datetime-time" title="Permalink to this headline">¶</a></h4>
+<p>The range fields are composed of two input widgets (from and two)
+instead of just one.</p>
+<p>This leads to peculiarities (compared to non-range search fields):</p>
+<ul>
+<li><p class="first">It is not possible to override the operator of a range field via
+<code class="docutils literal"><span class="pre">&#64;operator</span></code>, as the domain is built of two sections and each
+section uses a different operator.</p>
+</li>
+<li><p class="first">Instead of being a simple value (integer, string, float) <code class="docutils literal"><span class="pre">self</span></code>
+for use in <code class="docutils literal"><span class="pre">&#64;filter_domain</span></code> and <code class="docutils literal"><span class="pre">&#64;context</span></code> is a <code class="docutils literal"><span class="pre">dict</span></code>.</p>
+<p>Because each input widget of a range field can be empty (and the
+field itself will still be valid), care must be taken when using
+<code class="docutils literal"><span class="pre">self</span></code>: it has two string keys <code class="docutils literal"><span class="pre">&quot;from&quot;</span></code> and <code class="docutils literal"><span class="pre">&quot;to&quot;</span></code>, but any of
+these keys can be either missing entirely or set to the value
+<code class="docutils literal"><span class="pre">False</span></code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="actions-for-search-view">
+<h3>Actions for Search view<a class="headerlink" href="#actions-for-search-view" title="Permalink to this headline">¶</a></h3>
+<p>After declaring a search view, it will be used automatically for all tree views on the same model.
+If several search views exist for a single model, the one with the highest priority (lowest sequence) will
+be used. Another option is to explicitly select the search view you want to use, by setting the
+<code class="docutils literal"><span class="pre">search_view_id</span></code> field of the action.</p>
+<p>In addition to being able to pass default form values in the context of the action, OpenERP 6.0 now
+supports passing initial values for search views too, via the context. The context keys need to match the
+<code class="docutils literal"><span class="pre">search_default_XXX</span></code> format. <code class="docutils literal"><span class="pre">XXX</span></code> may refer to the <code class="docutils literal"><span class="pre">name</span></code> of a <code class="docutils literal"><span class="pre">&lt;field&gt;</span></code> or <code class="docutils literal"><span class="pre">&lt;filter&gt;</span></code>
+in the search view (as the <code class="docutils literal"><span class="pre">name</span></code> attribute is not required on filters, this only works for filters that have
+an explicit <code class="docutils literal"><span class="pre">name</span></code> set). The value should be either the initial value for search fields, or
+simply a boolean value for filters, to toggle them</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;action_view_task&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.actions.act_window&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>Tasks<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;res_model&quot;</span><span class="nt">&gt;</span>project.task<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_mode&quot;</span><span class="nt">&gt;</span>tree,form,calendar,gantt,graph<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">eval=</span><span class="s">&quot;False&quot;</span> <span class="na">name=</span><span class="s">&quot;filter&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;view_task_tree2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;context&quot;</span><span class="nt">&gt;</span>{&quot;search_default_current&quot;:1,&quot;search_default_user_id&quot;:uid}<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;search_view_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;view_task_search_form&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-filters">
+<h3>Custom Filters<a class="headerlink" href="#custom-filters" title="Permalink to this headline">¶</a></h3>
+<p>As of v6.0, all search views also features custom search filters, as show below.
+Users can define their own custom filters using any of the fields available on the current model,
+combining them with AND/OR operators. It is also possible to save any search context (the combination
+of all currently applied domain and context values) as a personal filter, which can be recalled
+at any time. Filters can also be turned into Shortcuts directly available in the User&#8217;s homepage.</p>
+<p>In above screenshot we filter Partner where Salesman = Demo user and Country = Belgium,
+We can save this search criteria as a Shortcut or save as Filter.</p>
+<p>Filters are user specific and can be modified via the Manage Filters option in the filters drop-down.</p>
+</div>
+</div>
+<div class="section" id="graph-views">
+<h2>Graph views<a class="headerlink" href="#graph-views" title="Permalink to this headline">¶</a></h2>
+<p>A graph is a new mode of view for all views of type form. If, for example, a sale order line must be visible as list or as graph, define it like this in the action that open this sale order line. Do not set the view mode as &#8220;tree,form,graph&#8221; or &#8220;form,graph&#8221; - it must be &#8220;graph,tree&#8221; to show the graph first or &#8220;tree,graph&#8221; to show the list first. (This view mode is extra to your &#8220;form,tree&#8221; view and should have a separate menu item):</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_mode&quot;</span><span class="nt">&gt;</span>tree,graph<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+<p>view_type:</p>
+<div class="highlight-python"><div class="highlight"><pre>tree = (tree with shortcuts at the left), form = (switchable view form/list)
+</pre></div>
+</div>
+<p>view_mode:</p>
+<div class="highlight-python"><div class="highlight"><pre>tree,graph : sequences of the views when switching
+</pre></div>
+</div>
+<p>Then, the user will be able to switch from one view to the other. Unlike forms and trees, OpenERP is not able to automatically create a view on demand for the graph type. So, you must define a view for this graph:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_order_line_graph&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>sale.order.line.graph<span class="nt">&lt;/field&gt;</span>
+   <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>sale.order.line<span class="nt">&lt;/field&gt;</span>
+   <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>graph<span class="nt">&lt;/field&gt;</span>
+   <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+         <span class="nt">&lt;graph</span> <span class="na">string=</span><span class="s">&quot;Sales Order Lines&quot;</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;product_id&quot;</span> <span class="na">group=</span><span class="s">&quot;True&quot;</span><span class="nt">/&gt;</span>
+              <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;price_unit&quot;</span> <span class="na">operator=</span><span class="s">&quot;*&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/graph&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>The graph view</p>
+<p>A view of type graph is just a list of fields for the graph.</p>
+<div class="section" id="graph-tag">
+<h3>Graph tag<a class="headerlink" href="#graph-tag" title="Permalink to this headline">¶</a></h3>
+<p>The default type of the graph is a pie chart - to change it to a barchart change <strong>&lt;graph string=&#8221;Sales Order Lines&#8221;&gt;</strong> to <strong>&lt;graph string=&#8221;Sales Order Lines&#8221; type=&#8221;bar&#8221;&gt;</strong> You also may change the orientation.</p>
+<p>:Example :</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;graph</span> <span class="na">string=</span><span class="s">&quot;Sales Order Lines&quot;</span> <span class="na">orientation=</span><span class="s">&quot;horizontal&quot;</span> <span class="na">type=</span><span class="s">&quot;bar&quot;</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="field-tag">
+<h3>Field tag<a class="headerlink" href="#field-tag" title="Permalink to this headline">¶</a></h3>
+<p>The first field is the X axis. The second one is the Y axis and the optional third one is the Z axis for 3 dimensional graphs. You can apply a few attributes to each field/axis:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>group</strong>: if set to true, the client will group all item of the same value for this field. For each other field, it will apply an operator</p>
+</li>
+<li><p class="first"><strong>operator</strong>: the operator to apply is another field is grouped. By default it&#8217;s &#8216;+&#8217;. Allowed values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li>+: addition</li>
+<li>*: multiply</li>
+<li>**: exponent</li>
+<li>min: minimum of the list</li>
+<li>max: maximum of the list</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Defining real statistics on objects:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>The easiest method to compute real statistics on objects is:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Define a statistic object which is a postgresql view</li>
+<li>Create a tree view and a graph view on this object</li>
+</ol>
+</div></blockquote>
+<p>You can get en example in all modules of the form: report_.... Example: report_crm.</p>
+</div>
+</div>
+<div class="section" id="controlling-view-actions">
+<h2>Controlling view actions<a class="headerlink" href="#controlling-view-actions" title="Permalink to this headline">¶</a></h2>
+<p>When defining a view, the following attributes can be added on the
+opening element of the view (i.e. <code class="docutils literal"><span class="pre">&lt;form&gt;</span></code>, <code class="docutils literal"><span class="pre">&lt;tree&gt;</span></code>...)</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">create</span></code></dt>
+<dd>set to <code class="docutils literal"><span class="pre">false</span></code> to hide the link / button which allows to create a new
+record.</dd>
+<dt><code class="docutils literal"><span class="pre">delete</span></code></dt>
+<dd>set to <code class="docutils literal"><span class="pre">false</span></code> to hide the link / button which allows to remove a
+record.</dd>
+<dt><code class="docutils literal"><span class="pre">edit</span></code></dt>
+<dd>set to <code class="docutils literal"><span class="pre">false</span></code> to hide the link / button which allows to
+edit a record.</dd>
+</dl>
+<p>These attributes are available on form, tree, kanban and gantt
+views. They are normally automatically set from the access rights of
+the users, but can be forced globally in the view definition. A
+possible use case for these attributes is to define an inner tree view
+for a one2many relation inside a form view, in which the user cannot
+add or remove related records, but only edit the existing ones (which
+are presumably created through another way, such as a wizard).</p>
+</div>
+<div class="section" id="calendar-views">
+<h2>Calendar Views<a class="headerlink" href="#calendar-views" title="Permalink to this headline">¶</a></h2>
+<p>Calendar view provides timeline/schedule view for the data.</p>
+<div class="section" id="view-specification">
+<h3>View Specification<a class="headerlink" href="#view-specification" title="Permalink to this headline">¶</a></h3>
+<p>Here is an example view:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;calendar</span> <span class="na">color=</span><span class="s">&quot;user_id&quot;</span> <span class="na">date_delay=</span><span class="s">&quot;planned_hours&quot;</span> <span class="na">date_start=</span><span class="s">&quot;date_start&quot;</span> <span class="na">string=</span><span class="s">&quot;Tasks&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;project_id&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/calendar&gt;</span>
+</pre></div>
+</div>
+<p>Here is the list of supported attributes for <code class="docutils literal"><span class="pre">calendar</span></code> tag:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">string</span></code></dt>
+<dd>The title string for the view.</dd>
+<dt><code class="docutils literal"><span class="pre">date_start</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">datetime</span></code> field to specify the starting date for the calendar item. This
+attribute is required.</dd>
+<dt><code class="docutils literal"><span class="pre">date_stop</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">datetime</span></code> field to specify the end date. Ignored if <code class="docutils literal"><span class="pre">date_delay</span></code>
+attribute is specified.</dd>
+<dt><code class="docutils literal"><span class="pre">date_delay</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">numeric</span></code> field to specify time in hours for a record. This attribute
+will get preference over <code class="docutils literal"><span class="pre">date_stop</span></code> and <code class="docutils literal"><span class="pre">date_stop</span></code> will be ignored.</dd>
+<dt><code class="docutils literal"><span class="pre">day_length</span></code></dt>
+<dd>An <code class="docutils literal"><span class="pre">integer</span></code> value to specify working day length. Default is <code class="docutils literal"><span class="pre">8</span></code> hours.</dd>
+<dt><code class="docutils literal"><span class="pre">color</span></code></dt>
+<dd>A field, generally <code class="docutils literal"><span class="pre">many2one</span></code>, to colorize calendar/gantt items.</dd>
+<dt><code class="docutils literal"><span class="pre">mode</span></code></dt>
+<dd><p class="first">A string value to set default view/zoom mode. For <code class="docutils literal"><span class="pre">calendar</span></code> view, this can be
+one of following (default is <code class="docutils literal"><span class="pre">month</span></code>):</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">day</span></code></li>
+<li><code class="docutils literal"><span class="pre">week</span></code></li>
+<li><code class="docutils literal"><span class="pre">month</span></code></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="screenshots">
+<h3>Screenshots<a class="headerlink" href="#screenshots" title="Permalink to this headline">¶</a></h3>
+<p>Month Calendar:</p>
+<p>Week Calendar:</p>
+</div>
+</div>
+<div class="section" id="gantt-views">
+<h2>Gantt Views<a class="headerlink" href="#gantt-views" title="Permalink to this headline">¶</a></h2>
+<p>Gantt view provides timeline view for the data. Generally, it can be used to display
+project tasks and resource allocation.</p>
+<p>A Gantt chart is a graphical display of all the tasks that a project is composed of.
+Each bar on the chart is a graphical representation of the length of time the task is
+planned to take.</p>
+<p>A resource allocation summary bar is shown on top of all the grouped tasks,
+representing how effectively the resources are allocated among the tasks.</p>
+<p>Color coding of the summary bar is as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>Gray</cite> shows that the resource is not allocated to any task at that time</li>
+<li><cite>Blue</cite> shows that the resource is fully allocated at that time.</li>
+<li><cite>Red</cite> shows that the resource is overallocated</li>
+</ul>
+</div></blockquote>
+<div class="section" id="id1">
+<h3>View Specification<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Here is an example view:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;gantt</span> <span class="na">color=</span><span class="s">&quot;user_id&quot;</span> <span class="na">date_delay=</span><span class="s">&quot;planned_hours&quot;</span> <span class="na">date_start=</span><span class="s">&quot;date_start&quot;</span> <span class="na">string=</span><span class="s">&quot;Tasks&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;level</span> <span class="na">object=</span><span class="s">&quot;project.project&quot;</span> <span class="na">link=</span><span class="s">&quot;project_id&quot;</span> <span class="na">domain=</span><span class="s">&quot;[]&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/level&gt;</span>
+<span class="nt">&lt;/gantt&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">attributes</span></code> accepted by the <code class="docutils literal"><span class="pre">gantt</span></code> tag are similar to <code class="docutils literal"><span class="pre">calendar</span></code> view tag. The
+<code class="docutils literal"><span class="pre">level</span></code> tag is used to group the records by some <code class="docutils literal"><span class="pre">many2one</span></code> field. Currently, only
+one level is supported.</p>
+<p>Here is the list of supported attributes for <code class="docutils literal"><span class="pre">gantt</span></code> tag:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">string</span></code></dt>
+<dd>The title string for the view.</dd>
+<dt><code class="docutils literal"><span class="pre">date_start</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">datetime</span></code> field to specify the starting date for the gantt item. This
+attribute is required.</dd>
+<dt><code class="docutils literal"><span class="pre">date_stop</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">datetime</span></code> field to specify the end date. Ignored if <code class="docutils literal"><span class="pre">date_delay</span></code>
+attribute is specified.</dd>
+<dt><code class="docutils literal"><span class="pre">date_delay</span></code></dt>
+<dd>A <code class="docutils literal"><span class="pre">numeric</span></code> field to specify time in hours for a record. This attribute
+will get preference over <code class="docutils literal"><span class="pre">date_stop</span></code> and <code class="docutils literal"><span class="pre">date_stop</span></code> will be ignored.</dd>
+<dt><code class="docutils literal"><span class="pre">day_length</span></code></dt>
+<dd>An <code class="docutils literal"><span class="pre">integer</span></code> value to specify working day length. Default is <code class="docutils literal"><span class="pre">8</span></code> hours.</dd>
+<dt><code class="docutils literal"><span class="pre">color</span></code></dt>
+<dd>A field, generally <code class="docutils literal"><span class="pre">many2one</span></code>, to colorize calendar/gantt items.</dd>
+<dt><code class="docutils literal"><span class="pre">mode</span></code></dt>
+<dd><p class="first">A string value to set default view/zoom mode. For <code class="docutils literal"><span class="pre">gantt</span></code> view, this can be
+one of following (default is <code class="docutils literal"><span class="pre">month</span></code>):</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">day</span></code></li>
+<li><code class="docutils literal"><span class="pre">3days</span></code></li>
+<li><code class="docutils literal"><span class="pre">week</span></code></li>
+<li><code class="docutils literal"><span class="pre">3weeks</span></code></li>
+<li><code class="docutils literal"><span class="pre">month</span></code></li>
+<li><code class="docutils literal"><span class="pre">3months</span></code></li>
+<li><code class="docutils literal"><span class="pre">year</span></code></li>
+<li><code class="docutils literal"><span class="pre">3years</span></code></li>
+<li><code class="docutils literal"><span class="pre">5years</span></code></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<p>The <code class="docutils literal"><span class="pre">level</span></code> tag supports following attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">object</span></code></dt>
+<dd>An openerp object having many2one relationship with view object.</dd>
+<dt><code class="docutils literal"><span class="pre">link</span></code></dt>
+<dd>The field name in current object that links to the given <code class="docutils literal"><span class="pre">object</span></code>.</dd>
+<dt><code class="docutils literal"><span class="pre">domain</span></code></dt>
+<dd>The domain to be used to filter the given <code class="docutils literal"><span class="pre">object</span></code> records.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="drag-and-drop">
+<h3>Drag and Drop<a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h3>
+<p>The left side pane displays list of the tasks grouped by the given <code class="docutils literal"><span class="pre">level</span></code> field.
+You can reorder or change the group of any records by dragging them.</p>
+<p>The main content pane displays horizontal bars plotted on a timeline grid. A group
+of bars are summarized with a top summary bar displaying resource allocation of all
+the underlying tasks.</p>
+<p>You can change the task start time by dragging the tasks horizontally. While
+end time can be changed by dragging right end of a bar.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The time is calculated considering <code class="docutils literal"><span class="pre">day_length</span></code> so a bar will span more
+then one day if total time for a task is greater then <code class="docutils literal"><span class="pre">day_length</span></code> value.</p>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>Screenshots<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="design-elements">
+<h2>Design Elements<a class="headerlink" href="#design-elements" title="Permalink to this headline">¶</a></h2>
+<p>The files describing the views are of the form:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="nt">&lt;openerp&gt;</span>
+   <span class="nt">&lt;data&gt;</span>
+       [view definitions]
+   <span class="nt">&lt;/data&gt;</span>
+<span class="nt">&lt;/openerp&gt;</span>
+</pre></div>
+</div>
+<p>The view definitions contain mainly three types of tags:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>&lt;record&gt;</strong> tags with the attribute model=&#8221;ir.ui.view&#8221;, which contain the view definitions themselves</li>
+<li><strong>&lt;record&gt;</strong> tags with the attribute model=&#8221;ir.actions.act_window&#8221;, which link actions to these views</li>
+<li><strong>&lt;menuitem&gt;</strong> tags, which create entries in the menu, and link them with actions</li>
+</ul>
+</div></blockquote>
+<p>New : You can specify groups for whom the menu is accessible using the groups
+attribute in the <cite>menuitem</cite> tag.</p>
+<p>New : You can now add shortcut using the <cite>shortcut</cite> tag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;shortcut</span>
+    <span class="na">name=</span><span class="s">&quot;Draft Purchase Order (Proposals)&quot;</span>
+    <span class="na">model=</span><span class="s">&quot;purchase.order&quot;</span>
+    <span class="na">logins=</span><span class="s">&quot;demo&quot;</span>
+    <span class="na">menu=</span><span class="s">&quot;m&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>Note that you should add an id attribute on the <cite>menuitem</cite> which is referred by
+menu attribute.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;v&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>sale.order.form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>sale.order<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;priority&quot;</span> <span class="na">eval=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;form</span> <span class="na">string=</span><span class="s">&quot;Sale Order&quot;</span><span class="nt">&gt;</span>
+                .........
+            <span class="nt">&lt;/form&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Default value for the priority field : 16. When not specified the system will use the view with the lower priority.</p>
+<div class="section" id="view-types">
+<h3>View Types<a class="headerlink" href="#view-types" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="tree-view">
+<h4>Tree View<a class="headerlink" href="#tree-view" title="Permalink to this headline">¶</a></h4>
+<p>You can specify the columns to include in the list, along with some details of
+the list&#8217;s appearance. The search fields aren&#8217;t specified here, they&#8217;re
+specified by the <cite>select</cite> attribute in the form view fields.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;view_location_tree2&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>stock.location.tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>stock.location<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;priority&quot;</span> <span class="na">eval=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;tree</span>
+                <span class="na">colors=</span><span class="s">&quot;blue:usage==&#39;view&#39;;darkred:usage==&#39;internal&#39;&quot;</span><span class="nt">&gt;</span>
+
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;complete_name&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;usage&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span>
+                <span class="na">name=</span><span class="s">&quot;stock_real&quot;</span>
+                <span class="na">invisible=</span><span class="s">&quot;&#39;product_id&#39; not in context&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span>
+                <span class="na">name=</span><span class="s">&quot;stock_virtual&quot;</span>
+                <span class="na">invisible=</span><span class="s">&quot;&#39;product_id&#39; not in context&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/tree&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>That example is just a flat list, but you can also display a real tree structure
+by specifying a <cite>field_parent</cite>. The name is a bit misleading, though; the field
+you specify must contain a list of all <strong>child</strong> entries.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;view_location_tree&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>stock.location.tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>stock.location<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>tree<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;field_parent&quot;</span><span class="nt">&gt;</span>child_ids<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;tree</span> <span class="na">toolbar=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">icon=</span><span class="s">&quot;icon&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/tree&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>On the <cite>tree</cite> element, the following attributes are supported:</p>
+<dl class="docutils">
+<dt>colors</dt>
+<dd>Conditions for applying different colors to items in the list. The default
+is black.</dd>
+<dt>toolbar</dt>
+<dd>Set this to 1 if you want a tree structure to list the top level entries
+in a separate toolbar area. When you click on an entry in the toolbar, all
+its descendants will be displayed in the main tree. The value is ignored
+for flat lists.</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="grouping-elements">
+<h3>Grouping Elements<a class="headerlink" href="#grouping-elements" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="separator">
+<h4>Separator<a class="headerlink" href="#separator" title="Permalink to this headline">¶</a></h4>
+<p>Adds a separator line</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;separator</span> <span class="na">string=</span><span class="s">&quot;Links&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>The string attribute defines its label and the colspan attribute defines his horizontal size (in number of columns).</p>
+</div>
+<div class="section" id="notebook">
+<h4>Notebook<a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h4>
+<p>&lt;notebook&gt;: With notebooks you can distribute the view fields on different tabs (each one defined by a page tag). You can use the tabpos properties to set tab at: up, down, left, right.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;notebook</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span><span class="nt">&gt;</span>....<span class="nt">&lt;/notebook&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="group">
+<h4>Group<a class="headerlink" href="#group" title="Permalink to this headline">¶</a></h4>
+<p>&lt;group&gt;: groups several columns and split the group in as many columns as desired.</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>colspan</strong>: the number of columns to use</li>
+<li><strong>rowspan</strong>: the number of rows to use</li>
+<li><strong>expand</strong>: if we should expand the group or not</li>
+<li><strong>col</strong>: the number of columns to provide (to its children)</li>
+<li><strong>string</strong>: (optional) If set, a frame will be drawn around the group of fields, with a label containing the string. Otherwise, the frame will be invisible.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;group</span> <span class="na">col=</span><span class="s">&quot;3&quot;</span> <span class="na">colspan=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;invoiced&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;button</span> <span class="na">colspan=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;make_invoice&quot;</span> <span class="na">states=</span><span class="s">&quot;confirmed&quot;</span> <span class="na">string=</span><span class="s">&quot;Make Invoice&quot;</span>
+        <span class="na">type=</span><span class="s">&quot;object&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/group&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="page">
+<h4>Page<a class="headerlink" href="#page" title="Permalink to this headline">¶</a></h4>
+<p>Defines a new notebook page for the view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;Order Line&quot;</span><span class="nt">&gt;</span> ... <span class="nt">&lt;/page&gt;</span>:
+</pre></div>
+</div>
+<ul class="simple">
+<li><strong>string</strong>: defines the name of the page.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="data-elements">
+<h3>Data Elements<a class="headerlink" href="#data-elements" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="field">
+<h4>Field<a class="headerlink" href="#field" title="Permalink to this headline">¶</a></h4>
+<p><em class="guilabel">attributes for the &#8220;field&#8221; tag</em></p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">select=&quot;1&quot;</span></code>: mark this field as being one of the search criteria for</dt>
+<dd><p class="first last">this resource&#8217;s search view. A value of 1 means that the field is
+included in the basic search, and a value of 2 means that it is in
+the advanced search.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">colspan=&quot;4&quot;</span></code>: the number of columns on which a field must extend.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">readonly=&quot;1&quot;</span></code>: set the widget as read only</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">required=&quot;1&quot;</span></code>: the field is marked as required. If a field is marked as required, a user has to fill it the system won&#8217;t save the resource if the field is not filled. This attribute supersede the required field value defined in the object.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">nolabel=&quot;1&quot;</span></code>: hides the label of the field (but the field is not hidden in the search view).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">invisible=&quot;True&quot;</span></code>: hides both the label and the field.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">password=&quot;True&quot;</span></code>: replace field values by asterisks, &#8220;*&#8221;.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">string=&quot;&quot;</span></code>: change the field label. Note that this label is also used in the search view: see select attribute above).</p>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">domain</span></code>: can restrict the domain.</dt>
+<dd><ul class="first last simple">
+<li>Example: domain=&#8221;[(&#8216;partner_id&#8217;,&#8217;=&#8217;,partner_id)]&#8221;</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">widget</span></code>: can change the widget.</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Example: widget=&#8221;one2many_list&#8221;</dt>
+<dd><ul class="first last simple">
+<li>one2one_list</li>
+<li>one2many_list</li>
+<li>many2one_list</li>
+<li>many2many</li>
+<li>url</li>
+<li>email</li>
+<li>image</li>
+<li>float_time</li>
+<li>reference</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">mode</span></code>: sequences of the views when switching.</dt>
+<dd><ul class="first last simple">
+<li>Example: mode=&#8221;tree,graph&#8221;</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">on_change</span></code>: define a function that is called when the content of the field changes.</dt>
+<dd><ul class="first last simple">
+<li>Example: on_change=&#8221;onchange_partner(type,partner_id)&#8221;</li>
+<li>See ViewsSpecialProperties for details</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">attrs</span></code>: Permits to define attributes of a field depends on other fields of the same window. (It can be use on     page, group, button and notebook tag also)</dt>
+<dd><blockquote class="first">
+<div><ul class="simple">
+<li>Format: &#8220;{&#8216;attribute&#8217;:[(&#8216;field_name&#8217;,&#8217;operator&#8217;,&#8217;value&#8217;),(&#8216;field_name&#8217;,&#8217;operator&#8217;,&#8217;value&#8217;)],&#8217;attribute2&#8217;:[(&#8216;field_name&#8217;,&#8217;operator&#8217;,&#8217;value&#8217;),]}&#8221;</li>
+<li>where attribute will be readonly, invisible, required</li>
+<li>Default value: {}.</li>
+<li>Example: (in product.product)</li>
+</ul>
+</div></blockquote>
+<div class="last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">digits=</span><span class="s">&quot;(14, 3)&quot;</span> <span class="na">name=</span><span class="s">&quot;volume&quot;</span> <span class="na">attrs=</span><span class="s">&quot;{&#39;readonly&#39;:[(&#39;type&#39;,&#39;=&#39;,&#39;service&#39;)]}&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">eval</span></code>: evaluate the attribute content as if it was Python code (see <a class="reference internal" href="#eval-attribute-link"><em>below</em></a> for example)</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">default_focus</span></code>: set to <code class="docutils literal"><span class="pre">1</span></code> to put the focus (cursor position) on this field when the form is first opened.
+There can only be one field within a view having this attribute set to <code class="docutils literal"><span class="pre">1</span></code> <strong>(new as of 5.2)</strong></p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">default_focus=</span><span class="s">”1”/</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>Example</p>
+<p>Here&#8217;s the source code of the view of a sale order object. This is the same object as the object shown on the screen shots of the presentation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="nt">&lt;openerp&gt;</span>
+    <span class="nt">&lt;data&gt;</span>
+    <span class="nt">&lt;record</span> <span class="na">id=</span><span class="s">&quot;view_partner_form&quot;</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form<span class="nt">&lt;/field&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;form</span> <span class="na">string=</span><span class="s">&quot;Partners&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;group</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">col=</span><span class="s">&quot;6&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">select=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;ref&quot;</span> <span class="na">select=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;customer&quot;</span> <span class="na">select=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">domain=</span><span class="s">&quot;[(&#39;domain&#39;, &#39;=&#39;, &#39;partner&#39;)]&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;supplier&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;/group&gt;</span>
+                <span class="nt">&lt;notebook</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;General&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">mode=</span><span class="s">&quot;form,tree&quot;</span> <span class="na">name=</span><span class="s">&quot;address&quot;</span>
+                         <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span> <span class="na">select=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;form</span> <span class="na">string=</span><span class="s">&quot;Partner Contacts&quot;</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">domain=</span><span class="s">&quot;[(&#39;domain&#39;, &#39;=&#39;, &#39;contact&#39;)]&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;function&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;street&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;street2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;newline/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;zip&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;city&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;newline/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">completion=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;country_id&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;state_id&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;newline/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;phone&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;fax&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;newline/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;mobile&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;email&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span> <span class="na">widget=</span><span class="s">&quot;email&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;/form&gt;</span>
+                            <span class="nt">&lt;tree</span> <span class="na">string=</span><span class="s">&quot;Partner Contacts&quot;</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;zip&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;city&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;country_id&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;phone&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;email&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;/tree&gt;</span>
+                        <span class="nt">&lt;/field&gt;</span>
+                        <span class="nt">&lt;separator</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">string=</span><span class="s">&quot;Categories&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;category_id&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/page&gt;</span>
+                    <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;Sales &amp;amp; Purchases&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;separator</span> <span class="na">string=</span><span class="s">&quot;General Information&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;user_id&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;active&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;website&quot;</span> <span class="na">widget=</span><span class="s">&quot;url&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;date&quot;</span> <span class="na">select=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;parent_id&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;newline/&gt;</span>
+                    <span class="nt">&lt;/page&gt;</span>
+                    <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;History&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;events&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span> <span class="na">widget=</span><span class="s">&quot;one2many_list&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/page&gt;</span>
+                    <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;Notes&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;field</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;comment&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/page&gt;</span>
+                <span class="nt">&lt;/notebook&gt;</span>
+            <span class="nt">&lt;/form&gt;</span>
+            <span class="nt">&lt;/field&gt;</span>
+        <span class="nt">&lt;/record&gt;</span>
+    <span class="nt">&lt;menuitem</span>
+            <span class="na">action=</span><span class="s">&quot;action_partner_form&quot;</span>
+            <span class="na">id=</span><span class="s">&quot;menu_partner_form&quot;</span>
+            <span class="na">parent=</span><span class="s">&quot;base.menu_base_partner&quot;</span>
+            <span class="na">sequence=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/data&gt;</span>
+ <span class="nt">&lt;/openerp&gt;</span>
+</pre></div>
+</div>
+<div class="section" id="the-eval-attribute">
+<span id="eval-attribute-link"></span><h5>The eval attribute<a class="headerlink" href="#the-eval-attribute" title="Permalink to this headline">¶</a></h5>
+<p>The <strong>eval</strong> attribute evaluate its content as if it was Python code. This
+allows you to define values that are not strings.</p>
+<p>Normally, content inside <em>&lt;field&gt;</em> tags are always evaluated as strings.</p>
+<dl class="describe">
+<dt>
+<code class="descname">Example 1:</code></dt>
+<dd></dd></dl>
+
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span><span class="nt">&gt;</span>2.3<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+<p>This will evaluate to the string <code class="docutils literal"><span class="pre">'2.3'</span></code> and not the float <code class="docutils literal"><span class="pre">2.3</span></code></p>
+<dl class="describe">
+<dt>
+<code class="descname">Example 2:</code></dt>
+<dd></dd></dl>
+
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span><span class="nt">&gt;</span>False<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+<p>This will evaluate to the string <code class="docutils literal"><span class="pre">'False'</span></code> and not the boolean
+<code class="docutils literal"><span class="pre">False</span></code>. This is especially tricky because Python&#8217;s conversion rules
+consider any non-empty string to be <code class="docutils literal"><span class="pre">True</span></code>, so the above code will
+end up storing the opposite of what is desired.</p>
+<p>If you want to evaluate the value to a float, a boolean or another
+type, except string, you need to use the <strong>eval</strong> attribute:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">eval=</span><span class="s">&quot;2.3&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">eval=</span><span class="s">&quot;False&quot;</span> <span class="nt">/&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="button">
+<h4>Button<a class="headerlink" href="#button" title="Permalink to this headline">¶</a></h4>
+<p>Adds a button to the current view. Allows the user to perform various
+actions on the current record.</p>
+<p>After a button has been clicked, the record should always be reloaded.</p>
+<p>Buttons have the following attributes:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">&#64;type</span></code></dt>
+<dd><p class="first">Defines the type of action performed when the button is activated:</p>
+<dl class="last docutils">
+<dt><code class="docutils literal"><span class="pre">workflow</span></code> (default)</dt>
+<dd><p class="first">The button will send a workflow signal <a class="footnote-reference" href="#id6" id="id3">[1]</a> on the current model
+using the <code class="docutils literal"><span class="pre">&#64;name</span></code> of the button as workflow signal name and
+providing the record id as parameter (in a list).</p>
+<p class="last">The workflow signal may return an action descriptor, which should
+be executed. Otherwise it will return <code class="docutils literal"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><code class="docutils literal"><span class="pre">object</span></code></dt>
+<dd>The button will execute the method of name <code class="docutils literal"><span class="pre">&#64;name</span></code> on the
+current model, providing the record id as parameter (in a
+list). This call may return an action descriptor to execute.</dd>
+<dt><code class="docutils literal"><span class="pre">action</span></code></dt>
+<dd><p class="first">The button will trigger the execution of an action
+(<code class="docutils literal"><span class="pre">ir.actions.actions</span></code>). The <code class="docutils literal"><span class="pre">id</span></code> of this action is the
+<code class="docutils literal"><span class="pre">&#64;name</span></code> of the button.</p>
+<p class="last">From there, follows the normal action-execution workflow.</p>
+</dd>
+</dl>
+</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;special</span></code></dt>
+<dd><p class="first">Only has one possible value currently: <code class="docutils literal"><span class="pre">cancel</span></code>, which indicates
+that the popup should be closed without performing any RPC call or
+action resolution.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only meaningful within a popup-type window (e.g. a
+wizard). Otherwise, is a noop.</p>
+</div>
+<div class="last admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><code class="docutils literal"><span class="pre">&#64;special</span></code> and <code class="docutils literal"><span class="pre">&#64;type</span></code> are incompatible.</p>
+</div>
+</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;name</span></code></dt>
+<dd>The button&#8217;s identifier, used to indicate which method should be
+called, which signal sent or which action executed.</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;confirm</span></code></dt>
+<dd>A confirmation popup to display before executing the button&#8217;s
+task. If the confirmation is dismissed the button&#8217;s task <em>must not</em>
+be executed.</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;string</span></code></dt>
+<dd>The label which should be displayed on the button <a class="footnote-reference" href="#id7" id="id4">[2]</a>.</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;icon</span></code></dt>
+<dd>Display an icon on the button, if absent the button is text-only
+<a class="footnote-reference" href="#id8" id="id5">[3]</a>.</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;states</span></code>, <code class="docutils literal"><span class="pre">&#64;attrs</span></code>, <code class="docutils literal"><span class="pre">&#64;invisible</span></code></dt>
+<dd>Standard OpenERP meaning for those view attributes</dd>
+<dt><code class="docutils literal"><span class="pre">&#64;default_focus</span></code></dt>
+<dd><p class="first">If set to a truthy value (<code class="docutils literal"><span class="pre">1</span></code>), automatically selects that button
+so it is used if <code class="docutils literal"><span class="pre">RETURN</span></code> is pressed while on the form.</p>
+<p>May be ignored by the client.</p>
+<div class="last versionadded">
+<p><span class="versionmodified">New in version 6.0.</span></p>
+</div>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;button</span> <span class="na">name=</span><span class="s">&quot;order_confirm&quot;</span> <span class="na">states=</span><span class="s">&quot;draft&quot;</span> <span class="na">string=</span><span class="s">&quot;Confirm Order&quot;</span> <span class="na">icon=</span><span class="s">&quot;gtk-execute&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">name=</span><span class="s">&quot;_action_open_window&quot;</span> <span class="na">string=</span><span class="s">&quot;Open Margins&quot;</span> <span class="na">type=</span><span class="s">&quot;object&quot;</span> <span class="na">default_focus=</span><span class="s">”1”/</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="label">
+<h4>Label<a class="headerlink" href="#label" title="Permalink to this headline">¶</a></h4>
+<p>Adds a simple label using the string attribute as caption.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;label</span> <span class="na">string=</span><span class="s">&quot;Test&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="new-line">
+<h4>New Line<a class="headerlink" href="#new-line" title="Permalink to this headline">¶</a></h4>
+<p>Force a return to the line even if all the columns of the view are not filled in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;newline/&gt;</span>
+</pre></div>
+</div>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>via <code class="docutils literal"><span class="pre">exec_workflow</span></code> on the <code class="docutils literal"><span class="pre">object</span></code> rpc endpoint</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[2]</a></td><td>in form view, in list view buttons have no label</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>behavior in list view is undefined, as list view buttons don&#8217;t
+have labels.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="section" id="inheritance-in-views">
+<h2>Inheritance in Views<a class="headerlink" href="#inheritance-in-views" title="Permalink to this headline">¶</a></h2>
+<p>When you create and inherit objects in some custom or specific modules, it is better to inherit (than to replace) from an existing view to add/modify/delete some fields and preserve the others.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;notebook</span> <span class="na">position=</span><span class="s">&quot;inside&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;Relations&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;relation_ids&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/page&gt;</span>
+        <span class="nt">&lt;/notebook&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>This will add a page to the notebook of the <code class="docutils literal"><span class="pre">res.partner.form</span></code> view in the
+base module.</p>
+<p>The inheritance engine will parse the existing view and search for the root nodes of</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+<p>It will append or edit the content of this tag. If this tag has some attributes,
+it will look in the parent view for a node with matching attributes (except
+position).</p>
+<p>You can use these values in the position attribute:</p>
+<blockquote>
+<div><ul class="simple">
+<li>inside (default): your values will be appended inside the tag</li>
+<li>after: add the content after the tag</li>
+<li>before: add the content before the tag</li>
+<li>replace: replace the content of the tag.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="replacing-content">
+<h3>Replacing Content<a class="headerlink" href="#replacing-content" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form1&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit1<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;page</span> <span class="na">string=</span><span class="s">&quot;Extra Info&quot;</span> <span class="na">position=</span><span class="s">&quot;replace&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;relation_ids&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/page&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Will replace the content of the Extra Info tab of the notebook with the <code class="docutils literal"><span class="pre">relation_ids</span></code> field.</p>
+<p>The parent and the inherited views are correctly updated with <code class="docutils literal"><span class="pre">--update=all</span></code> argument like any other views.</p>
+</div>
+<div class="section" id="deleting-content">
+<h3>Deleting Content<a class="headerlink" href="#deleting-content" title="Permalink to this headline">¶</a></h3>
+<p>To delete a field from a form, an empty element with <code class="docutils literal"><span class="pre">position=&quot;replace&quot;</span></code> attribute is used. Example:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form2&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit2<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span> <span class="na">position=</span><span class="s">&quot;replace&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inserting-content">
+<h3>Inserting Content<a class="headerlink" href="#inserting-content" title="Permalink to this headline">¶</a></h3>
+<p>To add a field into a form before the specified tag use <code class="docutils literal"><span class="pre">position=&quot;before&quot;</span></code> attribute.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form3&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit3<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span> <span class="na">position=</span><span class="s">&quot;before&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;relation_ids&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Will add <code class="docutils literal"><span class="pre">relation_ids</span></code> field before the <code class="docutils literal"><span class="pre">lang</span></code> field.</p>
+<p>To add a field into a form after the specified tag use <code class="docutils literal"><span class="pre">position=&quot;after&quot;</span></code> attribute.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form4&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit4<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span> <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;relation_ids&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Will add <code class="docutils literal"><span class="pre">relation_ids</span></code> field after the <code class="docutils literal"><span class="pre">lang</span></code> field.</p>
+</div>
+<div class="section" id="multiple-changes">
+<h3>Multiple Changes<a class="headerlink" href="#multiple-changes" title="Permalink to this headline">¶</a></h3>
+<p>To make changes in more than one location, wrap the fields in a data element.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form5&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit5<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;data&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span> <span class="na">position=</span><span class="s">&quot;replace&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;website&quot;</span> <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lang&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/field&gt;</span>
+        <span class="nt">&lt;/data&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Will delete the <code class="docutils literal"><span class="pre">lang</span></code> field from its usual location, and display it after
+the <code class="docutils literal"><span class="pre">website</span></code> field.</p>
+</div>
+<div class="section" id="xpath-element">
+<span id="xpath-element-inheritance"></span><h3>XPath Element<a class="headerlink" href="#xpath-element" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes a view is too complicated to let you simply identify a target field
+by name. For example, the field might appear in two places. When that happens,
+you can use an <code class="docutils literal"><span class="pre">xpath</span></code> element to describe where your changes should be
+placed.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;view_partner_form6&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>res.partner.form.inherit6<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>res.partner<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;base.view_partner_form&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;data&gt;</span>
+            <span class="nt">&lt;xpath</span>
+                <span class="na">expr=</span><span class="s">&quot;//field[@name=&#39;address&#39;]/form/field[@name=&#39;email&#39;]&quot;</span>
+                <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;age&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/xpath&gt;</span>
+            <span class="nt">&lt;xpath</span>
+                <span class="na">expr=</span><span class="s">&quot;//field[@name=&#39;address&#39;]/tree/field[@name=&#39;email&#39;]&quot;</span>
+                <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;age&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/xpath&gt;</span>
+        <span class="nt">&lt;/data&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</div>
+<p>Will add the <code class="docutils literal"><span class="pre">age</span></code> field after the <code class="docutils literal"><span class="pre">email</span></code> field in both the form and tree
+view of the address list.</p>
+</div>
+</div>
+<div class="section" id="specify-the-views-you-want-to-use">
+<h2>Specify the views you want to use<a class="headerlink" href="#specify-the-views-you-want-to-use" title="Permalink to this headline">¶</a></h2>
+<p>There are some cases where you would like to specify a view other than the default:</p>
+<ul class="simple">
+<li>If there are several form or tree views for an object.</li>
+<li>If you want to change the form or tree view used by a relational field
+(one2many for example).</li>
+</ul>
+<div class="section" id="using-the-priority-field">
+<h3>Using the priority field<a class="headerlink" href="#using-the-priority-field" title="Permalink to this headline">¶</a></h3>
+<p>This field is available in the view definition, and is 16 by default. By
+default, OpenERP will display a model using the view with the highest priority
+(the smallest number). For example, imagine we have two views for a simple model.
+The model <em>client</em> with two fields : <strong>firstname</strong> and <strong>lastname</strong>. We will define
+two views, one which shows the firstname first, and the other one which shows
+the lastname first.</p>
+<div class="highlight-xml"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">&lt;!--</span>
+<span class="c">    Here is the first view for the model &#39;client&#39;.</span>
+<span class="c">    We don&#39;t specify a priority field, which means</span>
+<span class="c">    by default 16.</span>
+<span class="c">--&gt;</span>
+<span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;client_form_view_1&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>client.form.view1<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>client<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/fiel&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;firstname&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lastname&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+
+<span class="c">&lt;!--</span>
+<span class="c">    A second view, which show fields in an other order.</span>
+<span class="c">    We specify a priority of 15.</span>
+<span class="c">--&gt;</span>
+<span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;client_form_view_2&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>client.form.view2<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>client<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;priority&quot;</span> <span class="na">eval=</span><span class="s">&quot;15&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/fiel&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lastname&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;firstname&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+</pre></div>
+</td></tr></table></div>
+<p>Now, each time OpenERP will have to show a form view for our object <em>client</em>, it will have the choice between two views.
+<strong>It will always use the second one, because it has a higher priority !</strong> Unless you tell it to use the first one !</p>
+</div>
+<div class="section" id="specify-per-action-view">
+<h3>Specify per-action view<a class="headerlink" href="#specify-per-action-view" title="Permalink to this headline">¶</a></h3>
+<p>To illustrate this point, we will create 2 menus which show a form view for this <em>client</em> object :</p>
+<div class="highlight-xml"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">&lt;!--</span>
+<span class="c">    This action open the default view (in our case,</span>
+<span class="c">    the view with the highest priority, the second one)</span>
+<span class="c">--&gt;</span>
+<span class="nt">&lt;record</span>
+    <span class="na">model=</span><span class="s">&quot;ir.actions.act_window&quot;</span>
+    <span class="na">id=</span><span class="s">&quot;client_form_action&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>client.form.action<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;res_model&quot;</span><span class="nt">&gt;</span>client<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_mode&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+
+<span class="c">&lt;!--</span>
+<span class="c">    This action open the view we specify.</span>
+<span class="c">--&gt;</span>
+<span class="nt">&lt;record</span>
+    <span class="na">model=</span><span class="s">&quot;ir.actions.act_window&quot;</span>
+    <span class="na">id=</span><span class="s">&quot;client_form_action1&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>client.form.action1<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;res_model&quot;</span><span class="nt">&gt;</span>client<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_mode&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;view_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;client_form_view_1&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/record&gt;</span>
+
+<span class="nt">&lt;menuitem</span> <span class="na">id=</span><span class="s">&quot;menu_id&quot;</span> <span class="na">name=</span><span class="s">&quot;Client main menu&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;menuitem</span>
+    <span class="na">id=</span><span class="s">&quot;menu_id_1&quot;</span>
+    <span class="na">name=</span><span class="s">&quot;Here we don&#39;t specify the view&quot;</span>
+    <span class="na">action=</span><span class="s">&quot;client_form_action&quot;</span> <span class="na">parent=</span><span class="s">&quot;menu_id&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;menuitem</span>
+    <span class="na">id=</span><span class="s">&quot;menu_id_1&quot;</span>
+    <span class="na">name=</span><span class="s">&quot;Here we specify the view&quot;</span>
+    <span class="na">action=</span><span class="s">&quot;client_form_action1&quot;</span> <span class="na">parent=</span><span class="s">&quot;menu_id&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</td></tr></table></div>
+<p>As you can see on line <em>19</em>, we can specify a view. That means that when we open
+the second menu, OpenERP will use the form view <em>client_form_view_1</em>, regardless
+of its priority.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Remember to use the module name (<em>module.view_id</em>) in the <em>ref</em> attribute if
+you are referring to a view defined in another module.</p>
+</div>
+</div>
+<div class="section" id="specify-views-for-related-fields">
+<h3>Specify views for related fields<a class="headerlink" href="#specify-views-for-related-fields" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="using-the-context">
+<h4>Using the context<a class="headerlink" href="#using-the-context" title="Permalink to this headline">¶</a></h4>
+<p>The <em>view_id</em> method works very well for menus/actions, but how can you specify the view to use for a one2many
+field, for example? When you have a one2many field, two views are used, a tree view (<strong>in blue</strong>), and a form view when
+you click on the add button (<strong>in red</strong>).</p>
+<p>When you add a one2many field in a form view, you do something like this :</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;order_line&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>If you want to specify the views to use, you can add a <em>context</em> attribute, and
+specify a view id for each type of view supported, exactly like the action&#8217;s
+<em>view_id</em> attribute, except that the provided view id must always be
+fully-qualified with the module name, even if it belongs to the same module:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;order_line&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span>
+       <span class="na">context=</span><span class="s">&quot;{&#39;form_view_ref&#39;: &#39;module.view_id&#39;,</span>
+<span class="s">                 &#39;tree_view_ref&#39;: &#39;module.view_id&#39;}&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You <em>have to</em> put the module name in the view_id, because this
+is evaluated when the view is displayed, and not when the XML file
+is parsed, so the module name information is not available. Failing
+to do so will result in the default view being selected (see
+below).</p>
+</div>
+<p>If you don&#8217;t specify the views, OpenERP will choose one in this order :</p>
+<ol class="arabic simple">
+<li>It will use the &lt;form&gt; or &lt;tree&gt; view defined <strong>inside</strong> the field (see below)</li>
+<li>Else, it will use the views with the highest priority for this object.</li>
+<li>Finally, it will generate default empty views, with all fields.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The context keys are named &lt;view_type&gt;_view_ref.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>By default, OpenERP will never use a view that is not defined for your object. If you have two models, with the
+same fields, but a different model name, OpenERP will never use the view of one for the other,
+even if one model inherit an other.</p>
+<p class="last">You can force this by manually specifying the view, either in the action or in the context.</p>
+</div>
+</div>
+<div class="section" id="using-subviews">
+<h4>Using subviews<a class="headerlink" href="#using-subviews" title="Permalink to this headline">¶</a></h4>
+<p>In the case of relational fields, you can create a view directly inside a field :</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;some_view&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>some.view<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>some.model.with.one2many<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;...&quot;</span><span class="nt">/&gt;</span>
+
+        <span class="c">&lt;!-- &lt;=== order_line is a one2many field --&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;order_line&quot;</span> <span class="na">colspan=</span><span class="s">&quot;4&quot;</span> <span class="na">nolabel=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;form&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;qty&quot;</span><span class="nt">/&gt;</span>
+                ...
+            <span class="nt">&lt;/form&gt;</span>
+            <span class="nt">&lt;tree&gt;</span>
+                <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;qty&quot;</span><span class="nt">/&gt;</span>
+                ...
+            <span class="nt">&lt;/tree&gt;</span>
+        <span class="nt">&lt;/field&gt;</span>
+<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+<p>If you or another developer want to inherit from this view in another module,
+you need to inherit from the parent view and then modify the child fields.
+With child views, you&#8217;ll often need to use an <a class="reference internal" href="#xpath-element-inheritance"><em>XPath Element</em></a>
+to describe exactly where to place your new fields.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;record</span> <span class="na">model=</span><span class="s">&quot;ir.ui.view&quot;</span> <span class="na">id=</span><span class="s">&quot;some_inherited_view&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span><span class="nt">&gt;</span>some.inherited.view<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span><span class="nt">&gt;</span>form<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;model&quot;</span><span class="nt">&gt;</span>some.model.with.one2many<span class="nt">&lt;/field&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;inherit_id&quot;</span> <span class="na">ref=</span><span class="s">&quot;core_module.some_view&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;arch&quot;</span> <span class="na">type=</span><span class="s">&quot;xml&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;data&gt;</span>
+            <span class="nt">&lt;xpath</span>
+               <span class="na">expr=</span><span class="s">&quot;//field[@name=&#39;order_line&#39;]/form/field[@name=&#39;qty&#39;]&quot;</span>
+               <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+               <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;size&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/xpath&gt;</span>
+            <span class="nt">&lt;xpath</span>
+               <span class="na">expr=</span><span class="s">&quot;//field[@name=&#39;order_line&#39;]/tree/field[@name=&#39;qty&#39;]&quot;</span>
+               <span class="na">position=</span><span class="s">&quot;after&quot;</span><span class="nt">&gt;</span>
+               <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;size&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/xpath&gt;</span>
+        <span class="nt">&lt;/data&gt;</span>
+<span class="nt">&lt;/field&gt;</span>
+</pre></div>
+</div>
+<p>One down side of defining a subview like this is that it can&#8217;t be inherited on
+its own, it can only be inherited with the parent view. Your views will be more
+flexible if you define the child views separately and then specify which child
+view to use as part of the one2many field.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Views and Events</a><ul>
+<li><a class="reference internal" href="#introduction-to-views">Introduction to Views</a><ul>
+<li><a class="reference internal" href="#views-principles">Views principles</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#form-views">Form views</a><ul>
+<li><a class="reference internal" href="#on-change">On Change</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tree-views">Tree views</a></li>
+<li><a class="reference internal" href="#search-views">Search views</a><ul>
+<li><a class="reference internal" href="#group-tag">Group tag</a></li>
+<li><a class="reference internal" href="#filter-tag">Filter tag</a></li>
+<li><a class="reference internal" href="#group-by">Group By</a></li>
+<li><a class="reference internal" href="#fields">Fields</a><ul>
+<li><a class="reference internal" href="#range-fields-date-datetime-time">Range fields (date, datetime, time)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#actions-for-search-view">Actions for Search view</a></li>
+<li><a class="reference internal" href="#custom-filters">Custom Filters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph-views">Graph views</a><ul>
+<li><a class="reference internal" href="#graph-tag">Graph tag</a></li>
+<li><a class="reference internal" href="#field-tag">Field tag</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#controlling-view-actions">Controlling view actions</a></li>
+<li><a class="reference internal" href="#calendar-views">Calendar Views</a><ul>
+<li><a class="reference internal" href="#view-specification">View Specification</a></li>
+<li><a class="reference internal" href="#screenshots">Screenshots</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gantt-views">Gantt Views</a><ul>
+<li><a class="reference internal" href="#id1">View Specification</a></li>
+<li><a class="reference internal" href="#drag-and-drop">Drag and Drop</a></li>
+<li><a class="reference internal" href="#id2">Screenshots</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-elements">Design Elements</a><ul>
+<li><a class="reference internal" href="#view-types">View Types</a><ul>
+<li><a class="reference internal" href="#tree-view">Tree View</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#grouping-elements">Grouping Elements</a><ul>
+<li><a class="reference internal" href="#separator">Separator</a></li>
+<li><a class="reference internal" href="#notebook">Notebook</a></li>
+<li><a class="reference internal" href="#group">Group</a></li>
+<li><a class="reference internal" href="#page">Page</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#data-elements">Data Elements</a><ul>
+<li><a class="reference internal" href="#field">Field</a><ul>
+<li><a class="reference internal" href="#the-eval-attribute">The eval attribute</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#button">Button</a></li>
+<li><a class="reference internal" href="#label">Label</a></li>
+<li><a class="reference internal" href="#new-line">New Line</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inheritance-in-views">Inheritance in Views</a><ul>
+<li><a class="reference internal" href="#replacing-content">Replacing Content</a></li>
+<li><a class="reference internal" href="#deleting-content">Deleting Content</a></li>
+<li><a class="reference internal" href="#inserting-content">Inserting Content</a></li>
+<li><a class="reference internal" href="#multiple-changes">Multiple Changes</a></li>
+<li><a class="reference internal" href="#xpath-element">XPath Element</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#specify-the-views-you-want-to-use">Specify the views you want to use</a><ul>
+<li><a class="reference internal" href="#using-the-priority-field">Using the priority field</a></li>
+<li><a class="reference internal" href="#specify-per-action-view">Specify per-action view</a></li>
+<li><a class="reference internal" href="#specify-views-for-related-fields">Specify views for related fields</a><ul>
+<li><a class="reference internal" href="#using-the-context">Using the context</a></li>
+<li><a class="reference internal" href="#using-subviews">Using subviews</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="03_module_dev.html">Modules</a><ul>
+      <li>Previous: <a href="03_module_dev_02.html" title="previous chapter">Objects, Fields and Methods</a></li>
+      <li>Next: <a href="03_module_dev_04.html" title="next chapter">Menus and Actions</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/03_module_dev_03.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

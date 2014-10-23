@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenERP Server Developers Documentation &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="#" />
+    <link rel="next" title="Getting started with OpenERP development" href="01_getting_started.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+  <div class=indexwrapper>
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="01_getting_started.html" title="Getting started with OpenERP development"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="openerp-server-developers-documentation">
+<h1>OpenERP Server Developers Documentation<a class="headerlink" href="#openerp-server-developers-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="openerp-server">
+<h2>OpenERP Server<a class="headerlink" href="#openerp-server" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01_getting_started.html">Getting started with OpenERP development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="01_getting_started.html#installation-from-sources">Installation from sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_getting_started.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_getting_started.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_getting_started.html#start-up-script">Start-up script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="02_architecture.html">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#openerp-as-a-multitenant-three-tiers-architecture">OpenERP as a multitenant three-tiers architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#mvc-architecture-in-openerp">MVC architecture in OpenERP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#network-communications-and-wsgi">Network communications and WSGI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="03_module_dev.html">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_01.html">Module structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_02.html">Objects, Fields and Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_03.html">Views and Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_04.html">Menus and Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_05.html">Example of module creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_module_dev_06.html">Module versioning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="04_security.html">Security in OpenERP: users, groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#users">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#user-groups">User groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#rights">Rights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#access-rights">Access rights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#menu-accesses">Menu accesses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#views-customization">Views customization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_security.html#administration">Administration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_framework.html">Test framework</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="05_test_framework.html#writing-tests">Writing tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_test_framework.html#running-the-tests">Running the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_test_framework.html#module-openerp.tests.common">TestCase subclasses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="06_misc.html">Miscellanous</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_on_change_tips.html">On Change Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_list_font_style.html">Font style in list views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_need_action_specs.html">Need action mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_user_img_specs.html">User avatar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_import.html">Bulk Import</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_misc_auto_join.html">Perfoming joins in select</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="09_deployment.html">Deploying with Gunicorn</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="09_deployment.html#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_deployment.html#sample-configuration-file">Sample configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_deployment.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_deployment.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_deployment.html#running-behind-a-reverse-proxy">Running behind a reverse proxy</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="openerp-server-api">
+<h2>OpenERP Server API<a class="headerlink" href="#openerp-server-api" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_models.html">ORM and models</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="concepts">
+<h2>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h2>
+<dl class="glossary docutils">
+<dt id="term-database-id">Database ID</dt>
+<dd>The primary key of a record in a PostgreSQL table (or a
+virtual version thereof), usually varies from one database to
+the next.</dd>
+<dt id="term-external-id">External ID</dt>
+<dd></dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="http://doc.openerp.com/">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+
+<h3>Other Docs</h3>
+<ul>
+  <li><a href="http://doc.openerp.com/trunk/developers">OpenERP Developers Documentation</a></li>
+  <li><a href="http://doc.openerp.com/trunk/developers/web">OpenERP Web Developers Documentation</a></li>
+  <li><a href="http://doc.openerp.com/trunk/users">OpenERP Users Documentation</a></li>
+</ul>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="http://www.openerp.com/">The OpenERP website</a></li>
+  <li><a href="http://python.org/">The Python programming language</a></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </div>
+  
+  </body>
+</html>

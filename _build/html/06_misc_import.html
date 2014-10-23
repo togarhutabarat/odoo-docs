@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Bulk Import &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Miscellanous" href="06_misc.html" />
+    <link rel="next" title="Perfoming joins in select" href="06_misc_auto_join.html" />
+    <link rel="prev" title="User avatar" href="06_misc_user_img_specs.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="06_misc_auto_join.html" title="Perfoming joins in select"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc_user_img_specs.html" title="User avatar"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="06_misc.html" accesskey="U">Miscellanous</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bulk-import">
+<span id="id1"></span><h1>Bulk Import<a class="headerlink" href="#bulk-import" title="Permalink to this headline">¶</a></h1>
+<p>OpenERP has included a bulk import facility for CSV-ish files for a
+long time. With 7.0, both the interface and internal implementation
+have been redone, resulting in
+<a class="reference internal" href="api_models.html#openerp.osv.orm.BaseModel.load" title="openerp.osv.orm.BaseModel.load"><code class="xref py py-meth docutils literal"><span class="pre">load()</span></code></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the previous bulk-loading method,
+<a class="reference internal" href="api_models.html#openerp.osv.orm.BaseModel.import_data" title="openerp.osv.orm.BaseModel.import_data"><code class="xref py py-meth docutils literal"><span class="pre">import_data()</span></code></a>, remains for
+backwards compatibility but was re-implemented on top of
+<a class="reference internal" href="api_models.html#openerp.osv.orm.BaseModel.load" title="openerp.osv.orm.BaseModel.load"><code class="xref py py-meth docutils literal"><span class="pre">load()</span></code></a>, while its interface is
+unchanged its precise behavior has likely been altered for some
+cases (it shouldn&#8217;t throw exceptions anymore in many cases where
+it previously did)</p>
+</div>
+<p>This document attempts to explain the behavior and limitations of
+<a class="reference internal" href="api_models.html#openerp.osv.orm.BaseModel.load" title="openerp.osv.orm.BaseModel.load"><code class="xref py py-meth docutils literal"><span class="pre">load()</span></code></a>.</p>
+<div class="section" id="data">
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h2>
+<p>The input <code class="docutils literal"><span class="pre">data</span></code> is a regular row-major matrix of strings (in Python
+datatype terms, a <code class="docutils literal"><span class="pre">list</span></code> of rows, each row being a <code class="docutils literal"><span class="pre">list</span></code> of
+<code class="docutils literal"><span class="pre">str</span></code>, all rows must be of equal length). Each row must be the same
+length as the <code class="docutils literal"><span class="pre">fields</span></code> list preceding it in the argslist.</p>
+<p>Each field of <code class="docutils literal"><span class="pre">fields</span></code> maps to a (potentially relational and nested)
+field of the model under import, and the corresponding column of the
+<code class="docutils literal"><span class="pre">data</span></code> matrix provides a value for the field for each record.</p>
+<p>Generally speaking each row of the input yields a record of output,
+and each cell of a row yields a value for the corresponding field of
+the row&#8217;s record. There is currently one exception for this rule:</p>
+<div class="section" id="one-to-many-fields">
+<h3>One to Many fields<a class="headerlink" href="#one-to-many-fields" title="Permalink to this headline">¶</a></h3>
+<p>Because O2M fields contain multiple records &#8220;embedded&#8221; in the main
+one, and these sub-records are fully dependent on the main record (are
+no other references to the sub-records in the system), they have to be
+spliced into the matrix somehow. This is done by adding lines composed
+<em>only</em> of o2m record fields below the main record:</p>
+<div class="highlight-python"><div class="highlight"><pre>+-------+-------+===========+===========+-------+-------+
+|value01|value02‖o2m/value01|o2m/value02‖value03|value04|
++-------+-------+-----------+-----------+-------+-------+
+|       |       ‖o2m/value11|o2m/value12‖       |       |
++-------+-------+-----------+-----------+-------+-------+
+|       |       ‖o2m/value21|o2m/value22‖       |       |
++-------+-------+===========+===========+-------+-------+
+|value11|value12‖o2m/value01|o2m/value02‖value13|value14|
++-------+-------+-----------+-----------+-------+-------+
+|       |       ‖o2m/value11|o2m/value12‖       |       |
++-------+-------+===========+===========+-------+-------+
+|value21|value22|           |           |value23|value24|
++-------+-------+-----------+-----------+-------+-------+
+</pre></div>
+</div>
+<p>the sections in double-lines represent the span of two o2m
+fields. During parsing, they are extracted into their own <code class="docutils literal"><span class="pre">data</span></code>
+matrix for the o2m field they correspond to.</p>
+</div>
+</div>
+<div class="section" id="import-process">
+<h2>Import process<a class="headerlink" href="#import-process" title="Permalink to this headline">¶</a></h2>
+<p>Here are the phases of import. Note that the concept of &#8220;phases&#8221; is
+fuzzy as it&#8217;s currently more of a pipeline, each record moves through
+the entire pipeline before the next one is processed.</p>
+<div class="section" id="extraction">
+<h3>Extraction<a class="headerlink" href="#extraction" title="Permalink to this headline">¶</a></h3>
+<p>The first phase of the import is the extraction of the current row
+(and potentially a section of rows following it if it has One to Many
+fields) into a record dictionary. The keys are the <code class="docutils literal"><span class="pre">fields</span></code>
+originally passed to <a class="reference internal" href="api_models.html#openerp.osv.orm.BaseModel.load" title="openerp.osv.orm.BaseModel.load"><code class="xref py py-meth docutils literal"><span class="pre">load()</span></code></a>, and the
+values are either the string value at the corresponding cell (for
+non-relational fields) or a list of sub-records (for all relational
+fields).</p>
+<p>This phase also generates the <code class="docutils literal"><span class="pre">rows</span></code> indexes for any
+<a class="reference internal" href="#import-message"><em>Messages</em></a> produced thereafter.</p>
+</div>
+<div class="section" id="conversion">
+<h3>Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h3>
+<p>This second phase takes the record dicts, extracts the <a class="reference internal" href="index.html#term-database-id"><em class="xref std std-term">database
+ID</em></a> and <a class="reference internal" href="index.html#term-external-id"><em class="xref std std-term">external ID</em></a> if present and attempts to convert each
+field to a type matching what OpenERP expects to write.</p>
+<ul class="simple">
+<li>Empty fields (empty strings) are replaced with the <code class="docutils literal"><span class="pre">False</span></code> value</li>
+<li>Non-empty fields are converted through
+<code class="xref py py-class docutils literal"><span class="pre">ir_fields_converter</span></code></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">if a field is specified in the import, its default will <em>never</em> be
+used. If some records need to have a value and others need to use
+the model&#8217;s default, either specify that default explicitly or do
+the import in two phases.</p>
+</div>
+<div class="section" id="char-text-and-binary-fields">
+<h4>Char, text and binary fields<a class="headerlink" href="#char-text-and-binary-fields" title="Permalink to this headline">¶</a></h4>
+<p>Are returned as-is, without any alteration.</p>
+</div>
+<div class="section" id="boolean-fields">
+<h4>Boolean fields<a class="headerlink" href="#boolean-fields" title="Permalink to this headline">¶</a></h4>
+<p>The string value is compared (in a case-insensitive manner) to <code class="docutils literal"><span class="pre">0</span></code>,
+<code class="docutils literal"><span class="pre">false</span></code> and <code class="docutils literal"><span class="pre">no</span></code> as well of any translation thereof loaded in the
+database. If the value matches one of these, the field is set to
+<code class="docutils literal"><span class="pre">False</span></code>.</p>
+<p>Otherwise the field is compared to <code class="docutils literal"><span class="pre">1</span></code>, <code class="docutils literal"><span class="pre">true</span></code> and <code class="docutils literal"><span class="pre">yes</span></code> (and
+any translation of these in the database). The field is always set to
+<code class="docutils literal"><span class="pre">True</span></code>, but if the value does not match one of these a warning will
+also be output.</p>
+</div>
+<div class="section" id="integers-and-float-fields">
+<h4>Integers and float fields<a class="headerlink" href="#integers-and-float-fields" title="Permalink to this headline">¶</a></h4>
+<p>The field is parsed with Python&#8217;s built-in conversion routines
+(<code class="docutils literal"><span class="pre">int</span></code> and <code class="docutils literal"><span class="pre">float</span></code> respectively), if the conversion fails an error
+is generated.</p>
+</div>
+<div class="section" id="selection-fields">
+<h4>Selection fields<a class="headerlink" href="#selection-fields" title="Permalink to this headline">¶</a></h4>
+<p>The field is compared to 1. the values of the selection (first part of
+each selection tuple) and 2. all translations of the selection label
+found in the database.</p>
+<p>If one of these is matched, the corresponding value is set on the
+field.</p>
+<p>Otherwise an error is generated.</p>
+<p>The same process applies to both list-type and function-type selection
+fields.</p>
+</div>
+<div class="section" id="many-to-one-field">
+<h4>Many to One field<a class="headerlink" href="#many-to-one-field" title="Permalink to this headline">¶</a></h4>
+<p>If the specified field is the relational field itself (<code class="docutils literal"><span class="pre">m2o</span></code>), the
+value is used in a <code class="docutils literal"><span class="pre">name_search</span></code>. The first record returned by
+<code class="docutils literal"><span class="pre">name_search</span></code> is used as the field&#8217;s value.</p>
+<p>If <code class="docutils literal"><span class="pre">name_search</span></code> finds no value, an error is generated. If
+<code class="docutils literal"><span class="pre">name_search</span></code> finds multiple value, a warning is generated to warn
+the user of <code class="docutils literal"><span class="pre">name_search</span></code> collisions.</p>
+<p>If the specified field is a <a class="reference internal" href="index.html#term-external-id"><em class="xref std std-term">external ID</em></a> (<code class="docutils literal"><span class="pre">m2o/id</span></code>), the
+corresponding record it looked up in the database and used as the
+field&#8217;s value. If no record is found matching the provided external
+ID, an error is generated.</p>
+<p>If the specified field is a <a class="reference internal" href="index.html#term-database-id"><em class="xref std std-term">database ID</em></a> (<code class="docutils literal"><span class="pre">m2o/.id</span></code>), the
+process is the same as for external ids (on database identifiers
+instead of external ones).</p>
+</div>
+<div class="section" id="many-to-many-field">
+<h4>Many to Many field<a class="headerlink" href="#many-to-many-field" title="Permalink to this headline">¶</a></h4>
+<p>The field&#8217;s value is interpreted as a comma-separated list of names,
+external ids or database ids. For each one, the process previously
+used for the many to one field is applied.</p>
+</div>
+<div class="section" id="one-to-many-field">
+<h4>One to Many field<a class="headerlink" href="#one-to-many-field" title="Permalink to this headline">¶</a></h4>
+<p>For each o2m record extracted, if the record has a <code class="docutils literal"><span class="pre">name</span></code>,
+<a class="reference internal" href="index.html#term-external-id"><em class="xref std std-term">external ID</em></a> or <a class="reference internal" href="index.html#term-database-id"><em class="xref std std-term">database ID</em></a> the <a class="reference internal" href="index.html#term-database-id"><em class="xref std std-term">database ID</em></a> is
+looked up and checked through the same process as for m2o fields.</p>
+<p>If a <a class="reference internal" href="index.html#term-database-id"><em class="xref std std-term">database ID</em></a> was found, a LINK_TO command is emmitted,
+followed by an UPDATE with the non-db values for the relational field.</p>
+<p>Otherwise a CREATE command is emmitted.</p>
+</div>
+<div class="section" id="date-fields">
+<h4>Date fields<a class="headerlink" href="#date-fields" title="Permalink to this headline">¶</a></h4>
+<p>The value&#8217;s format is checked against
+<code class="xref py py-data docutils literal"><span class="pre">DEFAULT_SERVER_DATE_FORMAT</span></code>, an error is
+generated if it does not match the specified format.</p>
+</div>
+<div class="section" id="datetime-fields">
+<h4>Datetime fields<a class="headerlink" href="#datetime-fields" title="Permalink to this headline">¶</a></h4>
+<p>The value&#8217;s format is checked against
+<code class="xref py py-data docutils literal"><span class="pre">DEFAULT_SERVER_DATETIME_FORMAT</span></code>, an error
+is generated if it does not match.</p>
+<p>The value is then interpreted as a datetime in the user&#8217;s
+timezone. The timezone is specified thus:</p>
+<ul class="simple">
+<li>If the import <code class="docutils literal"><span class="pre">context</span></code> contains a <code class="docutils literal"><span class="pre">tz</span></code> key with a valid
+timezone name, this is the timezone of the datetime.</li>
+<li>Otherwise if the user performing the import has a <code class="docutils literal"><span class="pre">tz</span></code> attribute
+set to a valid timezone name, this is the timezone of the datetime.</li>
+<li>Otherwise interpret the datetime as being in the <code class="docutils literal"><span class="pre">UTC</span></code> timezone.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="create-write">
+<h3>Create/Write<a class="headerlink" href="#create-write" title="Permalink to this headline">¶</a></h3>
+<p>If the conversion was successful, the converted record is then saved
+to the database via <code class="docutils literal"><span class="pre">(ir.model.data)._update</span></code>.</p>
+</div>
+<div class="section" id="error-handling">
+<h3>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h3>
+<p>The import process will only catch 2 types of exceptions to convert
+them to error messages: <code class="docutils literal"><span class="pre">ValueError</span></code> during the conversion process,
+and sub-exceptions of <code class="docutils literal"><span class="pre">psycopg2.Error</span></code> during the create/write
+process.</p>
+<p>The import process uses savepoint to:</p>
+<ul class="simple">
+<li>protect the overall transaction from the failure of each <code class="docutils literal"><span class="pre">_update</span></code>
+call, if an <code class="docutils literal"><span class="pre">_update</span></code> call fails the savepoint is rolled back and
+the import process keeps going in order to obtain as many error
+messages as possible during each run.</li>
+<li>protect the import as a whole, a savepoint is created before
+starting and if any error is generated that savepoint is rolled
+back. The rest of the transaction (anything not within the import
+process) will be left untouched.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="messages">
+<span id="import-messages"></span><span id="import-message"></span><h2>Messages<a class="headerlink" href="#messages" title="Permalink to this headline">¶</a></h2>
+<p>A message is a dictionary with 5 mandatory keys and one optional key:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">type</span></code></dt>
+<dd>the type of message, either <code class="docutils literal"><span class="pre">warning</span></code> or <code class="docutils literal"><span class="pre">error</span></code>. Any
+<code class="docutils literal"><span class="pre">error</span></code> message indicates the import failed and was rolled back.</dd>
+<dt><code class="docutils literal"><span class="pre">message</span></code></dt>
+<dd>the message&#8217;s actual text, which should be translated and can be
+shown to the user directly</dd>
+<dt><code class="docutils literal"><span class="pre">rows</span></code></dt>
+<dd>a dict with 2 keys <code class="docutils literal"><span class="pre">from</span></code> and <code class="docutils literal"><span class="pre">to</span></code>, indicates the range of
+rows in <code class="docutils literal"><span class="pre">data</span></code> which generated the message</dd>
+<dt><code class="docutils literal"><span class="pre">record</span></code></dt>
+<dd>a single integer, for warnings the index of the record which
+generated the message (can be obtained from a non-false <code class="docutils literal"><span class="pre">ids</span></code>
+result)</dd>
+<dt><code class="docutils literal"><span class="pre">field</span></code></dt>
+<dd>the name of the (logical) OpenERP field for which the error or
+warning was generated</dd>
+<dt><code class="docutils literal"><span class="pre">moreinfo</span></code> (optional)</dt>
+<dd><p class="first">A string, a list or a dict, leading to more information about the
+warning.</p>
+<ul class="last simple">
+<li>If <code class="docutils literal"><span class="pre">moreinfo</span></code> is a string, it is a supplementary warnings
+message which should be hidden by default</li>
+<li>If <code class="docutils literal"><span class="pre">moreinfo</span></code> is a list, it provides a number of possible or
+alternative values for the string</li>
+<li>If <code class="docutils literal"><span class="pre">moreinfo</span></code> is a dict, it is an OpenERP action descriptor
+which can be executed to get more information about the issues
+with the field. If present, the <code class="docutils literal"><span class="pre">help</span></code> key serves as a label
+for the action (e.g. the text of the link).</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Bulk Import</a><ul>
+<li><a class="reference internal" href="#data">Data</a><ul>
+<li><a class="reference internal" href="#one-to-many-fields">One to Many fields</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#import-process">Import process</a><ul>
+<li><a class="reference internal" href="#extraction">Extraction</a></li>
+<li><a class="reference internal" href="#conversion">Conversion</a><ul>
+<li><a class="reference internal" href="#char-text-and-binary-fields">Char, text and binary fields</a></li>
+<li><a class="reference internal" href="#boolean-fields">Boolean fields</a></li>
+<li><a class="reference internal" href="#integers-and-float-fields">Integers and float fields</a></li>
+<li><a class="reference internal" href="#selection-fields">Selection fields</a></li>
+<li><a class="reference internal" href="#many-to-one-field">Many to One field</a></li>
+<li><a class="reference internal" href="#many-to-many-field">Many to Many field</a></li>
+<li><a class="reference internal" href="#one-to-many-field">One to Many field</a></li>
+<li><a class="reference internal" href="#date-fields">Date fields</a></li>
+<li><a class="reference internal" href="#datetime-fields">Datetime fields</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-write">Create/Write</a></li>
+<li><a class="reference internal" href="#error-handling">Error handling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#messages">Messages</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="06_misc.html">Miscellanous</a><ul>
+      <li>Previous: <a href="06_misc_user_img_specs.html" title="previous chapter">User avatar</a></li>
+      <li>Next: <a href="06_misc_auto_join.html" title="next chapter">Perfoming joins in select</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/06_misc_import.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

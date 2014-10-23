@@ -1,0 +1,1403 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ORM and models &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="prev" title="Deploying with Gunicorn" href="09_deployment.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="09_deployment.html" title="Deploying with Gunicorn"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-openerp.osv.orm">
+<span id="orm-and-models"></span><h1>ORM and models<a class="headerlink" href="#module-openerp.osv.orm" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Object relational mapping to database (postgresql) module</dt>
+<dd><ul class="first last">
+<li><p class="first">Hierarchical structure</p>
+</li>
+<li><p class="first">Constraints consistency, validations</p>
+</li>
+<li><p class="first">Object meta Data depends on its status</p>
+</li>
+<li><p class="first">Optimised processing by complex query (multiple actions at once)</p>
+</li>
+<li><p class="first">Default fields value</p>
+</li>
+<li><p class="first">Permissions optimisation</p>
+</li>
+<li><p class="first">Persistant object: DB postgresql</p>
+</li>
+<li><p class="first">Datas conversions</p>
+</li>
+<li><p class="first">Multi-level caching system</p>
+</li>
+<li><p class="first">2 different inheritancies</p>
+</li>
+<li><dl class="first docutils">
+<dt>Fields:</dt>
+<dd><ul class="first last simple">
+<li>classicals (varchar, integer, boolean, ...)</li>
+<li>relations (one2many, many2one, many2many)</li>
+<li>functions</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="openerp.osv.orm.AbstractModel">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">AbstractModel</code><span class="sig-paren">(</span><em>pool</em>, <em>cr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#AbstractModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.AbstractModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract Model super-class for creating an abstract class meant to be
+inherited by regular models (Models or TransientModels) but not meant to
+be usable on its own, or persisted.</p>
+<p>Technical note: we don&#8217;t want to make AbstractModel the super-class of
+Model or BaseModel because it would not make sense to put the main
+definition of persistence methods such as create() in it, and still we
+should be able to override them within an AbstractModel.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.BaseModel">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">BaseModel</code><span class="sig-paren">(</span><em>pool</em>, <em>cr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for OpenERP models.</p>
+<p>OpenERP models are created by inheriting from this class&#8217; subclasses:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Model: for regular database-persisted models</p>
+</li>
+<li><dl class="first docutils">
+<dt>TransientModel: for temporary data, stored in the database but automatically</dt>
+<dd><p class="first last">vaccuumed every so often</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>AbstractModel: for abstract super classes meant to be shared by multiple</dt>
+<dd><p class="first last">_inheriting classes (usually Models or TransientModels)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The system will later instantiate the class once per database (on
+which the class&#8217; module is installed).</p>
+<p>To create a class that should not be instantiated, the _register class attribute
+may be set to False.</p>
+<dl class="attribute">
+<dt id="openerp.osv.orm.BaseModel.CONCURRENCY_CHECK_FIELD">
+<code class="descname">CONCURRENCY_CHECK_FIELD</code><em class="property"> = '__last_update'</em><a class="headerlink" href="#openerp.osv.orm.BaseModel.CONCURRENCY_CHECK_FIELD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.browse">
+<code class="descname">browse</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>select</em>, <em>context=None</em>, <em>list_class=None</em>, <em>fields_process=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.browse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.browse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch records as objects allowing to use dot notation to browse fields and relations</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>select</strong> &#8211; id or list of ids.</li>
+<li><strong>context</strong> &#8211; context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">object or list of objects requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.check_access_rights">
+<code class="descname">check_access_rights</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>operation</em>, <em>raise_exception=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.check_access_rights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.check_access_rights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verifies that the operation given by <code class="docutils literal"><span class="pre">operation</span></code> is allowed for the user
+according to the access rights.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.check_access_rule">
+<code class="descname">check_access_rule</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>operation</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.check_access_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.check_access_rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verifies that the operation given by <code class="docutils literal"><span class="pre">operation</span></code> is allowed for the user
+according to ir.rules.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>operation</strong> &#8211; one of <code class="docutils literal"><span class="pre">write</span></code>, <code class="docutils literal"><span class="pre">unlink</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises except_orm:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="simple">
+<li>if current ir.rules do not permit this operation.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None if the operation is allowed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.check_field_access_rights">
+<code class="descname">check_field_access_rights</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>operation</em>, <em>fields</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.check_field_access_rights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.check_field_access_rights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the user access rights on the given fields. This raises Access
+Denied if the user does not have the rights. Otherwise it returns the
+fields (as is if the fields is not falsy, or the readable/writable
+fields if fields is falsy).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.check_recursion">
+<code class="descname">check_recursion</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>context=None</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.check_recursion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.check_recursion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.clear_caches">
+<code class="descname">clear_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.clear_caches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.clear_caches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the caches</p>
+<p>This clears the caches associated to methods decorated with
+<code class="docutils literal"><span class="pre">tools.ormcache</span></code> or <code class="docutils literal"><span class="pre">tools.ormcache_multi</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>default=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Duplicate record with given id updating it with default values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>id</strong> &#8211; id of the record to copy</li>
+<li><strong>default</strong> (<em>dictionary</em>) &#8211; dictionary of field values to override in the original values of the copied record, e.g: <code class="docutils literal"><span class="pre">{'field_name':</span> <span class="pre">overriden_value,</span> <span class="pre">...}</span></code></li>
+<li><strong>context</strong> (<em>dictionary</em>) &#8211; context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">id of the newly created record</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.copy_data">
+<code class="descname">copy_data</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>default=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.copy_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.copy_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy given record&#8217;s data with all its fields values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>id</strong> &#8211; id of the record to copy</li>
+<li><strong>default</strong> (<em>dictionary</em>) &#8211; field values to override in the original values of the copied record</li>
+<li><strong>context</strong> (<em>dictionary</em>) &#8211; context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dictionary containing all the field values</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.copy_translations">
+<code class="descname">copy_translations</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>old_id</em>, <em>new_id</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.copy_translations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.copy_translations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>vals</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new record for the model.</p>
+<p>The values for the new record are initialized using the <code class="docutils literal"><span class="pre">vals</span></code>
+argument, and if necessary the result of <code class="docutils literal"><span class="pre">default_get()</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> (<em>integer</em>) &#8211; current user id</li>
+<li><strong>vals</strong> (<em>dictionary</em>) &#8211; field values for new record, e.g {&#8216;field_name&#8217;: field_value, ...}</li>
+<li><strong>context</strong> (<em>dictionary</em>) &#8211; optional context arguments, e.g. {&#8216;lang&#8217;: &#8216;en_us&#8217;, &#8216;tz&#8217;: &#8216;UTC&#8217;, ...}</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">id of new record created</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AccessError</strong> &#8211; <ul>
+<li>if user has no create rights on the requested object</li>
+<li>if user tries to bypass access rules for create on the requested object</li>
+</ul>
+</li>
+<li><strong>ValidateError</strong> &#8211; if user tries to enter invalid value for a field that is not in selection</li>
+<li><strong>UserError</strong> &#8211; if a loop would be created in a hierarchy of objects a result of the operation (such as setting an object as its own parent)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: The type of field values to pass in <code class="docutils literal"><span class="pre">vals</span></code> for relationship fields is specific.
+Please see the description of the <code class="xref py py-meth docutils literal"><span class="pre">write()</span></code> method for details about the possible values and how
+to specify them.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="openerp.osv.orm.BaseModel.create_instance">
+<em class="property">classmethod </em><code class="descname">create_instance</code><span class="sig-paren">(</span><em>pool</em>, <em>cr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.create_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.create_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instanciate a given model.</p>
+<p>This class method instanciates the class of some model (i.e. a class
+deriving from osv or osv_memory). The class might be the class passed
+in argument or, if it inherits from another class, a class constructed
+by combining the two classes.</p>
+<p>The <code class="docutils literal"><span class="pre">attributes</span></code> argument specifies which parent class attributes
+have to be combined.</p>
+<p>TODO: the creation of the combined class is repeated at each call of
+this method. This is probably unnecessary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.default_get">
+<code class="descname">default_get</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>fields_list</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.default_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.default_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns default values for the fields in fields_list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fields_list</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; list of fields to get the default values for (example [&#8216;field1&#8217;, &#8216;field2&#8217;,])</li>
+<li><strong>context</strong> &#8211; optional context dictionary - it may contains keys for specifying certain options
+like <code class="docutils literal"><span class="pre">context_lang</span></code> (language) or <code class="docutils literal"><span class="pre">context_tz</span></code> (timezone) to alter the results of the call.
+It may contain keys in the form <code class="docutils literal"><span class="pre">default_XXX</span></code> (where XXX is a field name), to set
+or override a default value for a field.
+A special <code class="docutils literal"><span class="pre">bin_size</span></code> boolean flag may also be passed in the context to request the
+value of all fields.binary columns to be returned as the size of the binary instead of its
+contents. This can also be selectively overriden by passing a field-specific flag
+in the form <code class="docutils literal"><span class="pre">bin_size_XXX:</span> <span class="pre">True/False</span></code> where <code class="docutils literal"><span class="pre">XXX</span></code> is the name of the field.
+Note: The <code class="docutils literal"><span class="pre">bin_size_XXX</span></code> form is new in OpenERP v6.0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dictionary of the default values (set on the object model class, through user preferences, or in the context)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.distinct_field_get">
+<code class="descname">distinct_field_get</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>field</em>, <em>value</em>, <em>args=None</em>, <em>offset=0</em>, <em>limit=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.distinct_field_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.distinct_field_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.exists">
+<code class="descname">exists</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the given id or ids exist in this model,
+and return the list of ids that do. This is simple to use for
+a truth test on a browse_record:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ids</strong> (<em>int or [int]</em>) &#8211; id or list of ids to check for existence</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the list of ids that currently exist, out of
+the given <cite>ids</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.export_data">
+<code class="descname">export_data</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>fields_to_export</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.export_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.export_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export fields for selected objects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>ids</strong> &#8211; list of ids</li>
+<li><strong>fields_to_export</strong> &#8211; list of fields</li>
+<li><strong>context</strong> &#8211; context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary with a <em>datas</em> matrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This method is used when exporting data via client menu</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.fields_get">
+<code class="descname">fields_get</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>allfields=None</em>, <em>context=None</em>, <em>write_access=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.fields_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.fields_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the definition of each field.</p>
+<p>The returned value is a dictionary (indiced by field name) of
+dictionaries. The _inherits&#8217;d fields are included. The string, help,
+and selection (if present) attributes are translated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> &#8211; current user id</li>
+<li><strong>allfields</strong> &#8211; list of fields</li>
+<li><strong>context</strong> &#8211; context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dictionary of field dictionaries, each one describing a field of the business object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises AccessError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last"><ul class="simple">
+<li>if user has no create/write rights on the requested object</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.fields_get_keys">
+<code class="descname">fields_get_keys</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.fields_get_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.fields_get_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.fields_view_get">
+<code class="descname">fields_view_get</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>view_id=None</em>, <em>view_type='form'</em>, <em>context=None</em>, <em>toolbar=False</em>, <em>submenu=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.fields_view_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.fields_view_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the detailed composition of the requested view like fields, model, view architecture</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> &#8211; current user id</li>
+<li><strong>view_id</strong> &#8211; id of the view or None</li>
+<li><strong>view_type</strong> &#8211; type of the view to return if view_id is None (&#8216;form&#8217;, tree&#8217;, ...)</li>
+<li><strong>context</strong> &#8211; context arguments, like lang, time zone</li>
+<li><strong>toolbar</strong> &#8211; true to include contextual actions</li>
+<li><strong>submenu</strong> &#8211; deprecated</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dictionary describing the composition of the requested view (including inherited views and extensions)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AttributeError</strong> &#8211; <ul>
+<li>if the inherited view has unknown position to work with other than &#8216;before&#8217;, &#8216;after&#8217;, &#8216;inside&#8217;, &#8216;replace&#8217;</li>
+<li>if some tag other than &#8216;position&#8217; is found in parent view</li>
+</ul>
+</li>
+<li><strong>Invalid ArchitectureError</strong> &#8211; if there is view type other than form, tree, calendar, search etc defined on the structure</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.get_external_id">
+<code class="descname">get_external_id</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.get_external_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.get_external_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the External ID of any database record, if there
+is one. This method works as a possible implementation
+for a function field, to be able to add it to any
+model object easily, referencing it as <code class="docutils literal"><span class="pre">Model.get_external_id</span></code>.</p>
+<p>When multiple External IDs exist for a record, only one
+of them is returned (randomly).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">map of ids to their fully qualified XML ID,
+defaulting to an empty string when there&#8217;s none
+(to be usable as a function field),
+e.g.:<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;module.ext_id&#39;</span><span class="p">,</span>
+  <span class="s">&#39;id2&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span> <span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.get_invalid_fields">
+<code class="descname">get_invalid_fields</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.get_invalid_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.get_invalid_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.get_xml_id">
+<code class="descname">get_xml_id</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#openerp.osv.orm.BaseModel.get_xml_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the External ID of any database record, if there
+is one. This method works as a possible implementation
+for a function field, to be able to add it to any
+model object easily, referencing it as <code class="docutils literal"><span class="pre">Model.get_external_id</span></code>.</p>
+<p>When multiple External IDs exist for a record, only one
+of them is returned (randomly).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">map of ids to their fully qualified XML ID,
+defaulting to an empty string when there&#8217;s none
+(to be usable as a function field),
+e.g.:<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;module.ext_id&#39;</span><span class="p">,</span>
+  <span class="s">&#39;id2&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span> <span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.import_data">
+<code class="descname">import_data</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>fields</em>, <em>datas</em>, <em>mode='init'</em>, <em>current_module=''</em>, <em>noupdate=False</em>, <em>context=None</em>, <em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.import_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.import_data" title="Permalink to this definition">¶</a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 7.0: </span>Use <a class="reference internal" href="#openerp.osv.orm.BaseModel.load" title="openerp.osv.orm.BaseModel.load"><code class="xref py py-meth docutils literal"><span class="pre">load()</span></code></a> instead</p>
+</div>
+<p>Import given data in given module</p>
+<p>This method is used when importing data via client menu.</p>
+<p>Example of fields to import for a sale.order:</p>
+<div class="highlight-python"><div class="highlight"><pre>.id,                         (=database_id)
+partner_id,                  (=name_search)
+order_line/.id,              (=database_id)
+order_line/name,
+order_line/product_id/id,    (=xml id)
+order_line/price_unit,
+order_line/product_uom_qty,
+order_line/product_uom/id    (=xml_id)
+</pre></div>
+</div>
+<p>This method returns a 4-tuple with the following structure:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">return_code</span><span class="p">,</span> <span class="n">errored_resource</span><span class="p">,</span> <span class="n">error_message</span><span class="p">,</span> <span class="n">unused</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>The first item is a return code, it is <code class="docutils literal"><span class="pre">-1</span></code> in case of
+import error, or the last imported row number in case of success</li>
+<li>The second item contains the record data dict that failed to import
+in case of error, otherwise it&#8217;s 0</li>
+<li>The third item contains an error message string in case of error,
+otherwise it&#8217;s 0</li>
+<li>The last item is currently unused, with no specific semantics</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fields</strong> &#8211; list of fields to import</li>
+<li><strong>datas</strong> &#8211; data to import</li>
+<li><strong>mode</strong> &#8211; &#8216;init&#8217; or &#8216;update&#8217; for record creation</li>
+<li><strong>current_module</strong> &#8211; module name</li>
+<li><strong>noupdate</strong> &#8211; flag for record creation</li>
+<li><strong>filename</strong> &#8211; optional file to store partial import state for recovery</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">4-tuple in the form (return_code, errored_resource, error_message, unused)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(int, dict or 0, str or 0, str or 0)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.is_transient">
+<code class="descname">is_transient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.is_transient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.is_transient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether the model is transient.</p>
+<p>See <a class="reference internal" href="#openerp.osv.orm.TransientModel" title="openerp.osv.orm.TransientModel"><code class="xref py py-class docutils literal"><span class="pre">TransientModel</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>fields</em>, <em>data</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to load the data matrix, and returns a list of ids (or
+<code class="docutils literal"><span class="pre">False</span></code> if there was an error and no id could be generated) and a
+list of messages.</p>
+<p>The ids are those of the records created and saved (in database), in
+the same order they were extracted from the file. They can be passed
+directly to <a class="reference internal" href="#openerp.osv.orm.BaseModel.read" title="openerp.osv.orm.BaseModel.read"><code class="xref py py-meth docutils literal"><span class="pre">read()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fields</strong> (<em>list(str)</em>) &#8211; list of fields to import, at the same index as the corresponding data</li>
+<li><strong>data</strong> (<em>list(list(str))</em>) &#8211; row-major matrix of data to import</li>
+<li><strong>context</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">{ids: list(int)|False, messages: [Message]}</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>message</em>, <em>secondary=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.name_create">
+<code class="descname">name_create</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>name</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.name_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.name_create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new record by calling <a class="reference internal" href="#openerp.osv.orm.BaseModel.create" title="openerp.osv.orm.BaseModel.create"><code class="xref py py-meth docutils literal"><span class="pre">create()</span></code></a> with only one
+value provided: the name of the new record (<code class="docutils literal"><span class="pre">_rec_name</span></code> field).
+The new record will also be initialized with any default values applicable
+to this model, or provided through the context. The usual behavior of
+<a class="reference internal" href="#openerp.osv.orm.BaseModel.create" title="openerp.osv.orm.BaseModel.create"><code class="xref py py-meth docutils literal"><span class="pre">create()</span></code></a> applies.
+Similarly, this method may raise an exception if the model has multiple
+required fields and some do not have default values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of the record to create</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the <a class="reference internal" href="#openerp.osv.orm.BaseModel.name_get" title="openerp.osv.orm.BaseModel.name_get"><code class="xref py py-meth docutils literal"><span class="pre">name_get()</span></code></a> pair value for the newly-created record.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.name_get">
+<code class="descname">name_get</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>ids</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.name_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.name_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the preferred display value (text representation) for the records with the
+given <code class="docutils literal"><span class="pre">ids</span></code>. By default this will be the value of the <code class="docutils literal"><span class="pre">name</span></code> column, unless
+the model implements a custom behavior.
+Can sometimes be seen as the inverse function of <a class="reference internal" href="#openerp.osv.orm.BaseModel.name_search" title="openerp.osv.orm.BaseModel.name_search"><code class="xref py py-meth docutils literal"><span class="pre">name_search()</span></code></a>, but it is not
+guaranteed to be.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(tuple)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of pairs <code class="docutils literal"><span class="pre">(id,text_repr)</span></code> for all records with the given <code class="docutils literal"><span class="pre">ids</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.name_search">
+<code class="descname">name_search</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>name=''</em>, <em>args=None</em>, <em>operator='ilike'</em>, <em>context=None</em>, <em>limit=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.name_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.name_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for records that have a display name matching the given <code class="docutils literal"><span class="pre">name</span></code> pattern if compared
+with the given <code class="docutils literal"><span class="pre">operator</span></code>, while also matching the optional search domain (<code class="docutils literal"><span class="pre">args</span></code>).
+This is used for example to provide suggestions based on a partial value for a relational
+field.
+Sometimes be seen as the inverse function of <a class="reference internal" href="#openerp.osv.orm.BaseModel.name_get" title="openerp.osv.orm.BaseModel.name_get"><code class="xref py py-meth docutils literal"><span class="pre">name_get()</span></code></a>, but it is not
+guaranteed to be.</p>
+<p>This method is equivalent to calling <a class="reference internal" href="#openerp.osv.orm.BaseModel.search" title="openerp.osv.orm.BaseModel.search"><code class="xref py py-meth docutils literal"><span class="pre">search()</span></code></a> with a search domain based on <code class="docutils literal"><span class="pre">name</span></code>
+and then <a class="reference internal" href="#openerp.osv.orm.BaseModel.name_get" title="openerp.osv.orm.BaseModel.name_get"><code class="xref py py-meth docutils literal"><span class="pre">name_get()</span></code></a> on the result of the search.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; optional search domain (see <a class="reference internal" href="#openerp.osv.orm.BaseModel.search" title="openerp.osv.orm.BaseModel.search"><code class="xref py py-meth docutils literal"><span class="pre">search()</span></code></a> for syntax),
+specifying further restrictions</li>
+<li><strong>operator</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; domain operator for matching the <code class="docutils literal"><span class="pre">name</span></code> pattern, such as <code class="docutils literal"><span class="pre">'like'</span></code>
+or <code class="docutils literal"><span class="pre">'='</span></code>.</li>
+<li><strong>limit</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; optional max number of records to return</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">list</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of pairs <code class="docutils literal"><span class="pre">(id,text_repr)</span></code> for all matching records.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.perm_read">
+<code class="descname">perm_read</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>ids</em>, <em>context=None</em>, <em>details=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.perm_read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.perm_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns some metadata about the given records.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>details</strong> &#8211; if True, *_uid fields are replaced with the name of the user</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of ownership dictionaries for each requested record</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of dictionaries with the following keys:<ul class="simple">
+<li>id: object id</li>
+<li>create_uid: user who created the record</li>
+<li>create_date: date when the record was created</li>
+<li>write_uid: last user who changed the record</li>
+<li>write_date: date of the last change to the record</li>
+<li>xmlid: XML ID to use to refer to this record (if there is one), in format <code class="docutils literal"><span class="pre">module.name</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.perm_write">
+<code class="descname">perm_write</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>ids</em>, <em>fields</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.perm_write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.perm_write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>ids</em>, <em>fields=None</em>, <em>context=None</em>, <em>load='_classic_read'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read records with given ids with the given fields</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> &#8211; current user id</li>
+<li><strong>ids</strong> &#8211; id or list of the ids of the records to read</li>
+<li><strong>fields</strong> (<em>list (example [&#8216;field_name_1&#8217;, ...])</em>) &#8211; optional list of field names to return (default: all fields would be returned)</li>
+<li><strong>context</strong> &#8211; optional context dictionary - it may contains keys for specifying certain options
+like <code class="docutils literal"><span class="pre">context_lang</span></code>, <code class="docutils literal"><span class="pre">context_tz</span></code> to alter the results of the call.
+A special <code class="docutils literal"><span class="pre">bin_size</span></code> boolean flag may also be passed in the context to request the
+value of all fields.binary columns to be returned as the size of the binary instead of its
+contents. This can also be selectively overriden by passing a field-specific flag
+in the form <code class="docutils literal"><span class="pre">bin_size_XXX:</span> <span class="pre">True/False</span></code> where <code class="docutils literal"><span class="pre">XXX</span></code> is the name of the field.
+Note: The <code class="docutils literal"><span class="pre">bin_size_XXX</span></code> form is new in OpenERP v6.0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of dictionaries((dictionary per record asked)) with requested field values</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">[{‘name_of_the_field’: value, ...}, ...]</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises AccessError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><ul class="simple">
+<li>if user has no read rights on the requested object</li>
+<li>if user tries to bypass access rules for read on the requested object</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.read_group">
+<code class="descname">read_group</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>domain</em>, <em>fields</em>, <em>groupby</em>, <em>offset=0</em>, <em>limit=None</em>, <em>context=None</em>, <em>orderby=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.read_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.read_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of records in list view grouped by the given <code class="docutils literal"><span class="pre">groupby</span></code> fields</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>domain</strong> &#8211; list specifying search criteria [[&#8216;field_name&#8217;, &#8216;operator&#8217;, &#8216;value&#8217;], ...]</li>
+<li><strong>fields</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; list of fields present in the list view specified on the object</li>
+<li><strong>groupby</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; fields by which the records will be grouped</li>
+<li><strong>offset</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; optional number of records to skip</li>
+<li><strong>limit</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; optional max number of records to return</li>
+<li><strong>context</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; context arguments, like lang, time zone</li>
+<li><strong>orderby</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; optional <code class="docutils literal"><span class="pre">order</span> <span class="pre">by</span></code> specification, for
+overriding the natural sort ordering of the
+groups, see also <code class="xref py py-meth docutils literal"><span class="pre">search()</span></code>
+(supported only for many2one fields currently)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>list of dictionaries(one dictionary for each record) containing:</p>
+<ul class="simple">
+<li>the values of fields grouped by the fields in <code class="docutils literal"><span class="pre">groupby</span></code> argument</li>
+<li>__domain: list of tuples specifying the search criteria</li>
+<li>__context: dictionary with argument like <code class="docutils literal"><span class="pre">groupby</span></code></li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">[{&#8216;field_name_1&#8217;: value, ...]</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises AccessError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><ul class="simple">
+<li>if user has no read rights on the requested object</li>
+<li>if user tries to bypass access rules for read on the requested object</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.read_string">
+<code class="descname">read_string</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>langs</em>, <em>fields=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.read_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.read_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.resolve_2many_commands">
+<code class="descname">resolve_2many_commands</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>field_name</em>, <em>commands</em>, <em>fields=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.resolve_2many_commands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.resolve_2many_commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes one2many and many2many commands into record dictionaries
+(as if all the records came from the database via a read()).  This
+method is aimed at onchange methods on one2many and many2many fields.</p>
+<p>Because commands might be creation commands, not all record dicts
+will contain an <code class="docutils literal"><span class="pre">id</span></code> field.  Commands matching an existing record
+will have an <code class="docutils literal"><span class="pre">id</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>field_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the one2many or many2many field matching the commands</li>
+<li><strong>commands</strong> (<em>list((int|False, int|False, dict|False))</em>) &#8211; one2many or many2many commands to execute on <code class="docutils literal"><span class="pre">field_name</span></code></li>
+<li><strong>fields</strong> (<em>list(str)</em>) &#8211; list of fields to read from the database, when applicable</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">records in a shape similar to that returned by <code class="docutils literal"><span class="pre">read()</span></code>
+(except records may be missing the <code class="docutils literal"><span class="pre">id</span></code> field if they don&#8217;t exist in db)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(dict)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.resolve_o2m_commands_to_record_dicts">
+<code class="descname">resolve_o2m_commands_to_record_dicts</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>field_name</em>, <em>commands</em>, <em>fields=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#openerp.osv.orm.BaseModel.resolve_o2m_commands_to_record_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes one2many and many2many commands into record dictionaries
+(as if all the records came from the database via a read()).  This
+method is aimed at onchange methods on one2many and many2many fields.</p>
+<p>Because commands might be creation commands, not all record dicts
+will contain an <code class="docutils literal"><span class="pre">id</span></code> field.  Commands matching an existing record
+will have an <code class="docutils literal"><span class="pre">id</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>field_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the one2many or many2many field matching the commands</li>
+<li><strong>commands</strong> (<em>list((int|False, int|False, dict|False))</em>) &#8211; one2many or many2many commands to execute on <code class="docutils literal"><span class="pre">field_name</span></code></li>
+<li><strong>fields</strong> (<em>list(str)</em>) &#8211; list of fields to read from the database, when applicable</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">records in a shape similar to that returned by <code class="docutils literal"><span class="pre">read()</span></code>
+(except records may be missing the <code class="docutils literal"><span class="pre">id</span></code> field if they don&#8217;t exist in db)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(dict)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.search">
+<code class="descname">search</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>args</em>, <em>offset=0</em>, <em>limit=None</em>, <em>order=None</em>, <em>context=None</em>, <em>count=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for records based on a search domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> &#8211; current user id</li>
+<li><strong>args</strong> &#8211; list of tuples specifying the search domain [(&#8216;field_name&#8217;, &#8216;operator&#8217;, value), ...]. Pass an empty list to match all records.</li>
+<li><strong>offset</strong> &#8211; optional number of results to skip in the returned values (default: 0)</li>
+<li><strong>limit</strong> &#8211; optional max number of records to return (default: <strong>None</strong>)</li>
+<li><strong>order</strong> &#8211; optional columns to sort by (default: self._order=id )</li>
+<li><strong>context</strong> (<em>dictionary</em>) &#8211; optional context arguments, like lang, time zone</li>
+<li><strong>count</strong> &#8211; optional (default: <strong>False</strong>), if <strong>True</strong>, returns only the number of records matching the criteria, not their ids</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">id or list of ids of records matching the criteria</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">integer or list of integers</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises AccessError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><ul class="simple">
+<li>if user tries to bypass access rules for read on the requested object.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Expressing a search domain (args)</strong></p>
+<p>Each tuple in the search domain needs to have 3 elements, in the form: <strong>(&#8216;field_name&#8217;, &#8216;operator&#8217;, value)</strong>, where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>field_name</strong> must be a valid name of field of the object model, possibly following many-to-one relationships using dot-notation, e.g &#8216;street&#8217; or &#8216;partner_id.country&#8217; are valid values.</li>
+<li><strong>operator</strong> must be a string with a valid comparison operator from this list: <code class="docutils literal"><span class="pre">=,</span> <span class="pre">!=,</span> <span class="pre">&gt;,</span> <span class="pre">&gt;=,</span> <span class="pre">&lt;,</span> <span class="pre">&lt;=,</span> <span class="pre">like,</span> <span class="pre">ilike,</span> <span class="pre">in,</span> <span class="pre">not</span> <span class="pre">in,</span> <span class="pre">child_of,</span> <span class="pre">parent_left,</span> <span class="pre">parent_right</span></code>
+The semantics of most of these operators are obvious.
+The <code class="docutils literal"><span class="pre">child_of</span></code> operator will look for records who are children or grand-children of a given record,
+according to the semantics of this model (i.e following the relationship field named by
+<code class="docutils literal"><span class="pre">self._parent_name</span></code>, by default <code class="docutils literal"><span class="pre">parent_id</span></code>.</li>
+<li><strong>value</strong> must be a valid value to compare with the values of <strong>field_name</strong>, depending on its type.</li>
+</ul>
+</div></blockquote>
+<p>Domain criteria can be combined using 3 logical operators than can be added between tuples:  &#8216;<strong>&amp;</strong>&#8216; (logical AND, default), &#8216;<strong>|</strong>&#8216; (logical OR), &#8216;<strong>!</strong>&#8216; (logical NOT).
+These are <strong>prefix</strong> operators and the arity of the &#8216;<strong>&amp;</strong>&#8216; and &#8216;<strong>|</strong>&#8216; operator is 2, while the arity of the &#8216;<strong>!</strong>&#8216; is just 1.
+Be very careful about this when you combine them the first time.</p>
+<p>Here is an example of searching for Partners named <em>ABC</em> from Belgium and Germany whose language is not english</p>
+<div class="highlight-python"><div class="highlight"><pre>[(&#39;name&#39;,&#39;=&#39;,&#39;ABC&#39;),&#39;!&#39;,(&#39;language.code&#39;,&#39;=&#39;,&#39;en_US&#39;),&#39;|&#39;,(&#39;country_id.code&#39;,&#39;=&#39;,&#39;be&#39;),(&#39;country_id.code&#39;,&#39;=&#39;,&#39;de&#39;))
+</pre></div>
+</div>
+<p>The &#8216;&amp;&#8217; is omitted as it is the default, and of course we could have used &#8216;!=&#8217; for the language, but what this domain really represents is:</p>
+<div class="highlight-python"><div class="highlight"><pre>(name is &#39;ABC&#39; AND (language is NOT english) AND (country is Belgium OR Germany))
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.search_count">
+<code class="descname">search_count</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.search_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.search_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.unlink">
+<code class="descname">unlink</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>ids</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.unlink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.unlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete records with given ids</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>uid</strong> &#8211; current user id</li>
+<li><strong>ids</strong> &#8211; id or list of ids</li>
+<li><strong>context</strong> &#8211; (optional) context arguments, like lang, time zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AccessError</strong> &#8211; <ul>
+<li>if user has no unlink rights on the requested object</li>
+<li>if user tries to bypass access rules for unlink on the requested object</li>
+</ul>
+</li>
+<li><strong>UserError</strong> &#8211; if the record is default property for other records</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.user_has_groups">
+<code class="descname">user_has_groups</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>groups</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.user_has_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.user_has_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if the user is at least member of one of the groups
+in groups_str. Typically used to resolve <code class="docutils literal"><span class="pre">groups</span></code> attribute
+in view and model definitions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>groups</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; comma-separated list of fully-qualified group
+external IDs, e.g.: <code class="docutils literal"><span class="pre">base.group_user,base.group_system</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the current user is a member of one of the
+given groups</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.view_header_get">
+<code class="descname">view_header_get</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>view_id=None</em>, <em>view_type='form'</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.view_header_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.view_header_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.view_init">
+<code class="descname">view_init</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>fields_list</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.view_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.view_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to do specific things when a view on the object is opened.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>cr</em>, <em>user</em>, <em>ids</em>, <em>vals</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update records with given ids with the given field values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cr</strong> &#8211; database cursor</li>
+<li><strong>user</strong> (<em>integer</em>) &#8211; current user id</li>
+<li><strong>ids</strong> &#8211; object id or list of object ids to update according to <strong>vals</strong></li>
+<li><strong>vals</strong> (<em>dictionary</em>) &#8211; field values to update, e.g {&#8216;field_name&#8217;: new_field_value, ...}</li>
+<li><strong>context</strong> (<em>dictionary</em>) &#8211; (optional) context arguments, e.g. {&#8216;lang&#8217;: &#8216;en_us&#8217;, &#8216;tz&#8217;: &#8216;UTC&#8217;, ...}</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AccessError</strong> &#8211; <ul>
+<li>if user has no write rights on the requested object</li>
+<li>if user tries to bypass access rules for write on the requested object</li>
+</ul>
+</li>
+<li><strong>ValidateError</strong> &#8211; if user tries to enter invalid value for a field that is not in selection</li>
+<li><strong>UserError</strong> &#8211; if a loop would be created in a hierarchy of objects a result of the operation (such as setting an object as its own parent)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: The type of field values to pass in <code class="docutils literal"><span class="pre">vals</span></code> for relationship fields is specific:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">For a many2many field, a list of tuples is expected.
+Here is the list of tuple that are accepted, with the corresponding semantics</p>
+<div class="highlight-python"><div class="highlight"><pre>(0, 0,  { values })    link to a new record that needs to be created with the given values dictionary
+(1, ID, { values })    update the linked record with id = ID (write *values* on it)
+(2, ID)                remove and delete the linked record with id = ID (calls unlink on ID, that will delete the object completely, and the link to it as well)
+(3, ID)                cut the link to the linked record with id = ID (delete the relationship between the two objects but does not delete the target object itself)
+(4, ID)                link to existing record with id = ID (adds a relationship)
+(5)                    unlink all (like using (3,ID) for all linked records)
+(6, 0, [IDs])          replace the list of linked IDs (like using (5) then (4,ID) for each ID in the list of IDs)
+
+Example:
+   [(6, 0, [8, 5, 6, 4])] sets the many2many to ids [8, 5, 6, 4]
+</pre></div>
+</div>
+</li>
+<li><p class="first">For a one2many field, a lits of tuples is expected.
+Here is the list of tuple that are accepted, with the corresponding semantics</p>
+<div class="highlight-python"><div class="highlight"><pre>(0, 0,  { values })    link to a new record that needs to be created with the given values dictionary
+(1, ID, { values })    update the linked record with id = ID (write *values* on it)
+(2, ID)                remove and delete the linked record with id = ID (calls unlink on ID, that will delete the object completely, and the link to it as well)
+
+Example:
+   [(0, 0, {&#39;field_name&#39;:field_value_record1, ...}), (0, 0, {&#39;field_name&#39;:field_value_record2, ...})]
+</pre></div>
+</div>
+</li>
+<li><p class="first">For a many2one field, simply use the ID of target record, which must already exist, or <code class="docutils literal"><span class="pre">False</span></code> to remove the link.</p>
+</li>
+<li><p class="first">For a reference field, use a string with the model name, a comma, and the target object id (example: <code class="docutils literal"><span class="pre">'product.product,</span> <span class="pre">5'</span></code>)</p>
+</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="openerp.osv.orm.BaseModel.write_string">
+<code class="descname">write_string</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>langs</em>, <em>vals</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#BaseModel.write_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BaseModel.write_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="openerp.osv.orm.BrowseRecordError">
+<em class="property">exception </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">BrowseRecordError</code><a class="reference internal" href="_modules/openerp/osv/orm.html#BrowseRecordError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.BrowseRecordError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="openerp.osv.orm.ImportWarning">
+<em class="property">exception </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">ImportWarning</code><a class="reference internal" href="_modules/openerp/osv/orm.html#ImportWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.ImportWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to send warnings upwards the stack during the import process</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.MetaModel">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">MetaModel</code><span class="sig-paren">(</span><em>name</em>, <em>bases</em>, <em>attrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#MetaModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.MetaModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metaclass for the Model.</p>
+<p>This class is used as the metaclass for the Model class to discover
+the models defined in a module (i.e. without instanciating them).
+If the automatic discovery is not needed, it is possible to set the
+model&#8217;s _register attribute to False.</p>
+<dl class="attribute">
+<dt id="openerp.osv.orm.MetaModel.module_to_models">
+<code class="descname">module_to_models</code><em class="property"> = {}</em><a class="headerlink" href="#openerp.osv.orm.MetaModel.module_to_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.Model">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>pool</em>, <em>cr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main super-class for regular database-persisted OpenERP models.</p>
+<p>OpenERP models are created by inheriting from this class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">user</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The system will later instantiate the class once per database (on
+which the class&#8217; module is installed).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.TransientModel">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">TransientModel</code><span class="sig-paren">(</span><em>pool</em>, <em>cr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#TransientModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.TransientModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model super-class for transient records, meant to be temporarily
+persisted, and regularly vaccuum-cleaned.</p>
+<p>A TransientModel has a simplified access rights management,
+all users can create new records, and may only access the
+records they created. The super-user has unrestricted access
+to all TransientModel records.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.browse_null">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">browse_null</code><a class="reference internal" href="_modules/openerp/osv/orm.html#browse_null"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.browse_null" title="Permalink to this definition">¶</a></dt>
+<dd><p>Readonly python database object browser</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.browse_record">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">browse_record</code><span class="sig-paren">(</span><em>cr</em>, <em>uid</em>, <em>id</em>, <em>table</em>, <em>cache</em>, <em>context=None</em>, <em>list_class=&lt;class 'openerp.osv.orm.browse_record_list'&gt;</em>, <em>fields_process=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#browse_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.browse_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object that behaves like a row of an object&#8217;s table.
+It has attributes after the columns of the corresponding object.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">uobj</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;res.users&#39;</span><span class="p">)</span>
+<span class="n">user_rec</span> <span class="o">=</span> <span class="n">uobj</span><span class="o">.</span><span class="n">browse</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="mi">104</span><span class="p">)</span>
+<span class="n">name</span> <span class="o">=</span> <span class="n">user_rec</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="openerp.osv.orm.browse_record.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#browse_record.refresh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.browse_record.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force refreshing this browse_record&#8217;s data and all the data of the
+records that belong to the same cache, by emptying the cache completely,
+preserving only the record identifiers (for prefetching optimizations).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="openerp.osv.orm.browse_record_list">
+<em class="property">class </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">browse_record_list</code><span class="sig-paren">(</span><em>lst</em>, <em>context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#browse_record_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.browse_record_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection of browse objects</p>
+<p>Such an instance will be returned when doing a <code class="docutils literal"><span class="pre">browse([ids..])</span></code>
+and will be iterable, yielding browse() objects</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.check_object_name">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">check_object_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#check_object_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.check_object_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given name is a valid openerp object name.</p>
+<p>The _name attribute in osv and osv_memory object is subject to
+some restrictions. This function returns True or False whether
+the given name is allowed or not.</p>
+<p>TODO: this is an approximation. The goal in this approximation
+is to disallow uppercase characters (in some places, we quote
+table/column names and in other not, which leads to this kind
+of errors:</p>
+<blockquote>
+<div>psycopg2.ProgrammingError: relation &#8220;xxx&#8221; does not exist).</div></blockquote>
+<p>The same restriction should apply to both osv and osv_memory
+objects for consistency.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.convert_pgerror_23502">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">convert_pgerror_23502</code><span class="sig-paren">(</span><em>model</em>, <em>fields</em>, <em>info</em>, <em>e</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#convert_pgerror_23502"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.convert_pgerror_23502" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.convert_pgerror_23505">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">convert_pgerror_23505</code><span class="sig-paren">(</span><em>model</em>, <em>fields</em>, <em>info</em>, <em>e</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#convert_pgerror_23505"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.convert_pgerror_23505" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="openerp.osv.orm.except_orm">
+<em class="property">exception </em><code class="descclassname">openerp.osv.orm.</code><code class="descname">except_orm</code><span class="sig-paren">(</span><em>name</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#except_orm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.except_orm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.fix_import_export_id_paths">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">fix_import_export_id_paths</code><span class="sig-paren">(</span><em>fieldname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#fix_import_export_id_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.fix_import_export_id_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fixes the id fields in import and exports, and splits field paths
+on &#8216;/&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fieldname</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the field to import/export</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">split field name</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.get_pg_type">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">get_pg_type</code><span class="sig-paren">(</span><em>f</em>, <em>type_override=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#get_pg_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.get_pg_type" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>f</strong> (<em>fields._column</em>) &#8211; field to get a Postgres type for</li>
+<li><strong>type_override</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#type" title="(in Python v2.7)"><em>type</em></a>) &#8211; use the provided type for dispatching instead of the field&#8217;s own type</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(postgres_identification_type, postgres_type_specification)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(str, str)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.intersect">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">intersect</code><span class="sig-paren">(</span><em>la</em>, <em>lb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.intersect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.itemgetter_tuple">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">itemgetter_tuple</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#itemgetter_tuple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.itemgetter_tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fixes itemgetter inconsistency (useful in some cases) of not returning
+a tuple if len(items) == 1: always returns an n-tuple where n = len(items)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.modifiers_tests">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">modifiers_tests</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#modifiers_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.modifiers_tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.pg_varchar">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">pg_varchar</code><span class="sig-paren">(</span><em>size=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#pg_varchar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.pg_varchar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the VARCHAR declaration for the provided size:</p>
+<ul class="simple">
+<li>If no size (or an empty or negative size is provided) return an
+&#8216;infinite&#8217; VARCHAR</li>
+<li>Otherwise return a VARCHAR(n)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.raise_on_invalid_object_name">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">raise_on_invalid_object_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#raise_on_invalid_object_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.raise_on_invalid_object_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.setup_modifiers">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">setup_modifiers</code><span class="sig-paren">(</span><em>node</em>, <em>field=None</em>, <em>context=None</em>, <em>in_tree_view=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#setup_modifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.setup_modifiers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes node attributes and field descriptors to generate
+the <code class="docutils literal"><span class="pre">modifiers</span></code> node attribute and set it on the provided node.</p>
+<p>Alters its first argument in-place.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> (<em>lxml.etree._Element</em>) &#8211; <code class="docutils literal"><span class="pre">field</span></code> node from an OpenERP view</li>
+<li><strong>field</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; field descriptor corresponding to the provided node</li>
+<li><strong>context</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; execution context used to evaluate node attributes</li>
+<li><strong>in_tree_view</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; triggers the <code class="docutils literal"><span class="pre">tree_invisible</span></code> code
+path (separate from <code class="docutils literal"><span class="pre">invisible</span></code>): in
+tree view there are two levels of
+invisibility, cell content (a column is
+present but the cell itself is not
+displayed) with <code class="docutils literal"><span class="pre">invisible</span></code> and column
+invisibility (the whole column is
+hidden) with <code class="docutils literal"><span class="pre">tree_invisible</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.simplify_modifiers">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">simplify_modifiers</code><span class="sig-paren">(</span><em>modifiers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#simplify_modifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.simplify_modifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.test_modifiers">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">test_modifiers</code><span class="sig-paren">(</span><em>what</em>, <em>expected</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#test_modifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.test_modifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.transfer_field_to_modifiers">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">transfer_field_to_modifiers</code><span class="sig-paren">(</span><em>field</em>, <em>modifiers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#transfer_field_to_modifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.transfer_field_to_modifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.transfer_modifiers_to_node">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">transfer_modifiers_to_node</code><span class="sig-paren">(</span><em>modifiers</em>, <em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#transfer_modifiers_to_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.transfer_modifiers_to_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="openerp.osv.orm.transfer_node_to_modifiers">
+<code class="descclassname">openerp.osv.orm.</code><code class="descname">transfer_node_to_modifiers</code><span class="sig-paren">(</span><em>node</em>, <em>modifiers</em>, <em>context=None</em>, <em>in_tree_view=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openerp/osv/orm.html#transfer_node_to_modifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openerp.osv.orm.transfer_node_to_modifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="09_deployment.html" title="previous chapter">Deploying with Gunicorn</a></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api_models.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>

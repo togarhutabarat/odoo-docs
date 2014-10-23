@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Need action mechanism &mdash; OpenERP Server Developers Documentation 7.0b documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0b',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="OpenERP Server Developers Documentation 7.0b documentation" href="index.html" />
+    <link rel="up" title="Miscellanous" href="06_misc.html" />
+    <link rel="next" title="User avatar" href="06_misc_user_img_specs.html" />
+    <link rel="prev" title="Font style in list views" href="06_misc_list_font_style.html" />
+   
+  
+  <link media="only screen and (max-device-width: 480px)" href="_static/small_flask.css" type= "text/css" rel="stylesheet" />
+
+  </head>
+  <body role="document">
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="06_misc_user_img_specs.html" title="User avatar"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="06_misc_list_font_style.html" title="Font style in list views"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">OpenERP Server Developers Documentation 7.0b documentation</a> &raquo;</li>
+          <li><a href="06_misc.html" accesskey="U">Miscellanous</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="need-action-mechanism">
+<h1>Need action mechanism<a class="headerlink" href="#need-action-mechanism" title="Permalink to this headline">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 7.0.</span></p>
+</div>
+<div class="section" id="ir-needaction-mixin-class">
+<h2>ir.needaction_mixin class<a class="headerlink" href="#ir-needaction-mixin-class" title="Permalink to this headline">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified">New in version openobject-server.4124.</span></p>
+</div>
+<p>This revision adds a mixin class for objects using the need action feature.</p>
+<p>Need action feature can be used by objects willing to be able to signal that an action is required on a particular record. If in the business logic an action must be performed by somebody, for instance validation by a manager, this mechanism allows to set a list of users asked to perform an action.</p>
+<p>This class wraps a class (ir.ir_needaction_users_rel) that behaves like a many2many field. However, no field is added to the model inheriting from ir.needaction_mixin. The mixin class manages the low-level considerations of updating relationships. Every change made on the record calls a method that updates the relationships.</p>
+<p>Objects using the need_action feature should override the <code class="docutils literal"><span class="pre">get_needaction_user_ids</span></code> method. This methods returns a dictionary whose keys are record ids, and values a list of user ids, like in a many2many relationship. Therefore by defining only one method, you can specify if an action is required by defining the users that have to do it, in every possible situation.</p>
+<dl class="docutils">
+<dt>This class also offers several global services,:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">needaction_get_record_ids</span></code>: for the current model and uid, get all record ids that ask this user to perform an action. This mechanism is used for instance to display the number of pending actions in menus, such as Leads (12)</li>
+<li><code class="docutils literal"><span class="pre">needaction_get_action_count</span></code>: as <code class="docutils literal"><span class="pre">needaction_get_record_ids</span></code> but returns only the number of action, not the ids (performs a search with count=True)</li>
+<li><code class="docutils literal"><span class="pre">needaction_get_user_record_references</span></code>: for a given uid, get all the records that ask this user to perform an action. Records are given as references, a list of tuples (model_name, record_id).</li>
+</ul>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified">New in version openobject-server.4137.</span></p>
+</div>
+<p>This revision of the needaction_mixin mechanism slighty modifies the class behavior. The <code class="docutils literal"><span class="pre">ir_needaction_mixin</span></code> class now adds a function field on models inheriting from the class. This field allows to state whether a given record has a needaction for the current user. This is usefull if you want to customize views according to the needaction feature. For example, you may want to set records in bold in a list view if the current user has an action to perform on the record. This makes the class not a pure abstract class, but allows to easily use the action information. The field definition is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">get_needaction_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">needaction_user_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_needaction_user_ids</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+        <span class="n">res</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">needaction_user_ids</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="n">_columns</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;needaction_pending&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">get_needaction_pending</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;boolean&#39;</span><span class="p">,</span>
+                    <span class="n">string</span><span class="o">=</span><span class="s">&#39;Need action pending&#39;</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s">&#39;If True, this field states that users have to perform an action. </span><span class="se">\</span>
+<span class="s">                            This field comes from the needaction mechanism. Please refer </span><span class="se">\</span>
+<span class="s">                            to the ir.needaction_mixin class.&#39;</span><span class="p">),</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ir-needaction-users-rel-class">
+<h2>ir.needaction_users_rel class<a class="headerlink" href="#ir-needaction-users-rel-class" title="Permalink to this headline">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified">New in version openobject-server.4124.</span></p>
+</div>
+<p>This class essentially wraps a database table that behaves like a many2many.
+It holds data related to the needaction mechanism inside OpenERP. A row
+in this model is characterized by:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">res_model</span></code>: model of the record requiring an action</li>
+<li><code class="docutils literal"><span class="pre">res_id</span></code>: ID of the record requiring an action</li>
+<li><code class="docutils literal"><span class="pre">user_id</span></code>: foreign key to the res.users table, to the user that
+has to perform the action</li>
+</ul>
+</div></blockquote>
+<p>This model can be seen as a many2many, linking (res_model, res_id) to
+users (those whose attention is required on the record)</p>
+</div>
+<div class="section" id="menu-modification">
+<h2>Menu modification<a class="headerlink" href="#menu-modification" title="Permalink to this headline">¶</a></h2>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version openobject-server.4137.</span></p>
+</div>
+<dl class="docutils">
+<dt>This revision adds three functional fields to <code class="docutils literal"><span class="pre">ir.ui.menu</span></code> model :</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">uses_needaction</span></code>: boolean field. If the menu entry action is an act_window action, and if this action is related to a model that uses the need_action mechanism, this field is set to true. Otherwise, it is false.</li>
+<li><code class="docutils literal"><span class="pre">needaction_uid_ctr</span></code>: integer field. If the target model uses the need action mechanism, this field gives the number of actions the current user has to perform.</li>
+<li><strong>REMOVED</strong> <code class="docutils literal"><span class="pre">needaction_record_ids</span></code>: many2many field. If the target model uses the need action mechanism, this field holds the ids of the record requesting the user to perform an action. <strong>This field has been removed on version XXXX</strong>.</li>
+</ul>
+</dd>
+</dl>
+<p>Those fields are functional, because they depend on the user and must therefore be computed at every refresh, each time menus are displayed. The use of the need action mechanism is done by taking into account the action domain in order to display accurate results. When computing the value of the functional fields, the ids of records asking the user to perform an action is concatenated to the action domain. A counting search is then performed on the model, giving back the number of action the users has to perform, limited to the domain of the action.</p>
+</div>
+<div class="section" id="addon-implementation-example">
+<h2>Addon implementation example<a class="headerlink" href="#addon-implementation-example" title="Permalink to this headline">¶</a></h2>
+<p>In your <code class="docutils literal"><span class="pre">foo</span></code> module, you want to specify that when it is in state <code class="docutils literal"><span class="pre">confirmed</span></code>, it has to be validated by a manager, given by the field <code class="docutils literal"><span class="pre">manager_id</span></code>. After making <code class="docutils literal"><span class="pre">foo</span></code> inheriting from <code class="docutils literal"><span class="pre">ir.needaction_mixin</span></code>, you override the <code class="docutils literal"><span class="pre">get_needaction_user_ids</span></code> method:</p>
+<div class="highlight-python"><div class="highlight"><pre>[...]
+_inherit = [`ir.needaction_mixin]
+[...]
+def get_needaction_user_ids(self, cr, uid, ids, context=None):
+  result = dict.fromkeys(ids)
+  for foo_obj in self.browse(cr, uid, ids, context=context):
+    # set the list void by default
+    result[foo_obj.id] = []
+    # if foo_obj is confirmed: manager is required to perform an action
+    if foo_obj.state == &#39;confirmed&#39;:
+      result[foo_obj.id] = [foo_obj.manager_id]
+  return result
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo"><a href="index.html">
+  <img class="logo" src="_static/openerp.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Need action mechanism</a><ul>
+<li><a class="reference internal" href="#ir-needaction-mixin-class">ir.needaction_mixin class</a></li>
+<li><a class="reference internal" href="#ir-needaction-users-rel-class">ir.needaction_users_rel class</a></li>
+<li><a class="reference internal" href="#menu-modification">Menu modification</a></li>
+<li><a class="reference internal" href="#addon-implementation-example">Addon implementation example</a></li>
+</ul>
+</li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="06_misc.html">Miscellanous</a><ul>
+      <li>Previous: <a href="06_misc_list_font_style.html" title="previous chapter">Font style in list views</a></li>
+      <li>Next: <a href="06_misc_user_img_specs.html" title="next chapter">User avatar</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/06_misc_need_action_specs.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2012, OpenERP s.a.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> and a modified <a href="https://github.com/mitsuhiko/flask-sphinx-themes">Flask theme</a>.
+  </div>
+  
+  </body>
+</html>
